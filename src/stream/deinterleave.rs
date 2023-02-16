@@ -21,6 +21,7 @@ impl<A> Deinterleave<A>
 where
     A: Send + 'static + Copy,
 {
+    #[allow(clippy::new_ret_no_self)]
     pub fn new() -> Block {
         Block::new(
             BlockMetaBuilder::new("Deinterleave").build(),
