@@ -40,6 +40,27 @@ impl TypeConvertersBuilder {
             marker_output: PhantomData,
         }
     }
+
+    pub fn lossy_scale_convert_f32_u8() -> ScaledConverterBuilder<f32, u8> {
+        ScaledConverterBuilder::<f32, u8> {
+            marker_input: PhantomData,
+            marker_output: PhantomData,
+        }
+    }
+
+    pub fn lossy_scale_convert_f32_i8() -> ScaledConverterBuilder<f32, i8> {
+        ScaledConverterBuilder::<f32, i8> {
+            marker_input: PhantomData,
+            marker_output: PhantomData,
+        }
+    }
+
+    pub fn lossy_scale_convert_f32_i16() -> ScaledConverterBuilder<f32, i16> {
+        ScaledConverterBuilder::<f32, i16> {
+            marker_input: PhantomData,
+            marker_output: PhantomData,
+        }
+    }
 }
 
 impl<A, B> ConverterBuilder<A, B>
