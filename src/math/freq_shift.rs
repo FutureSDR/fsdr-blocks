@@ -11,6 +11,18 @@ use futuresdr::runtime::StreamIo;
 use futuresdr::runtime::StreamIoBuilder;
 use futuresdr::runtime::WorkIo;
 
+/// This blocks shift the signal in the frequency domain based on the [`NCO`] implementation.
+/// Currently implemented only for float and [`Complex32`]
+///
+/// # Usage
+///
+/// ```
+/// # use futuresdr::num_complex::Complex32;
+/// # use fsdr_blocks::math::FrequencyShifter;
+/// # let freq = 2_000;
+/// # let sample_rate = 48_000;
+/// let blk = FrequencyShifter::<Complex32>::new(freq as f32, sample_rate as f32);
+/// ```
 pub struct FrequencyShifter<A>
 where
     A: Send + 'static + Copy,
