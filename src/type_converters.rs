@@ -1,8 +1,39 @@
+//! ## Blocks related to type conversion
+//!
+//! Conversion could be
+//!  * exact, ie just like mathematical numbers
+//!  * scaled, ie adjusted to range over the targeted type interval
+//!  * lossy, ie with precision loss
+//!
+//! # Usage
+//!
+//! `u8` [0..255] will be converted into `f32` as [-1.0..1.0] with scaled conversion:
+//! ```
+//! # use fsdr_blocks::type_converters::TypeConvertersBuilder;
+//! let blk = TypeConvertersBuilder::scale_convert::<u8, f32>().build();
+//! ```
+//!
+//! `u8` [0..255] will be converted into `f32` as [0.0..255.0] with plain conversion:
+//! ```
+//! # use fsdr_blocks::type_converters::TypeConvertersBuilder;
+//! let blk = TypeConvertersBuilder::convert::<u8, f32>().build();
+//! ```
+//!
+//! Some other conversions are lossy because there is no natural conversion of all possible inputs.
+//! Conversion of `f32` into `i6` is an example because `16.3` has no direct conversion, yet `16` is a good candidate.
+//! But `f32` can also represent positive or negative infinity, and NaN (not a number) that are not convertible.
+//!
+//! ```
+//! # use fsdr_blocks::type_converters::TypeConvertersBuilder;
+//! let blk = TypeConvertersBuilder::lossy_scale_convert_f32_i16().build();
+//! ```
+
 use core::marker::PhantomData;
 
 use futuresdr::blocks::Apply;
 use futuresdr::runtime::Block;
 
+/// Main builder for type conversion blocks
 pub struct TypeConvertersBuilder {}
 
 pub struct ConverterBuilder<A, B> {

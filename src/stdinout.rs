@@ -1,3 +1,5 @@
+//! ## Blocks related to stdin/stdout serialization
+
 use core::marker::PhantomData;
 use futuresdr::blocks::Sink;
 use futuresdr::num_complex::Complex32;
@@ -15,6 +17,22 @@ enum BytesOrder {
     LittleEndian,
 }
 
+/// Build blocks to serialize/deserialized stream from stdin/stdout.
+/// It also takes care of endianness.
+///
+/// # Usage
+///
+/// Build a block that outputs a stream of u8 with native endianness to stdout:
+/// ```
+/// # use fsdr_blocks::stdinout::StdInOutBuilder;
+/// let blk = StdInOutBuilder::<u8>::stdout().as_ne().build();
+/// ```
+///
+/// Build a block that outputs a stream of `u8` with little endianness to stdout:
+/// ```
+/// # use fsdr_blocks::stdinout::StdInOutBuilder;
+/// let blk = StdInOutBuilder::<u8>::stdout().as_le().build();
+/// ```
 pub struct StdInOutBuilder<A> {
     direction: StdDirection,
     marker_type: PhantomData<A>,

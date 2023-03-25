@@ -9,6 +9,14 @@ use futuresdr::runtime::StreamIo;
 use futuresdr::runtime::StreamIoBuilder;
 use futuresdr::runtime::WorkIo;
 
+/// This blocks deinterleave a unique stream into two separate stream.
+/// Typically used to deinterleave iq stream into of stream for `i` and one for `q`.
+///
+/// # Usage
+/// ```
+/// use fsdr_blocks::stream::Deinterleave;
+/// let blk = Deinterleave::<f32>::new();
+/// ```
 pub struct Deinterleave<A>
 where
     A: Send + 'static + Copy,
