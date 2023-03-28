@@ -9,7 +9,7 @@ repository = "https://github.com/futuresdr/fsdr-blocks/"
 description = "Building blocks for FutureSDR signal processing library for SDR and real-time DSP."
 keywords = ["sdr", "radio", "blocks", "iir", "fir", "async", "acceleration"]
 categories = ["asynchronous", "concurrency", "hardware-support", "science"]
-
+readme = "README.md"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
