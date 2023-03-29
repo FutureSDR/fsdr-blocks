@@ -1,0 +1,25 @@
+name: Release
+
+# permissions:
+#   contents: write
+
+on:
+  push:
+    tags:
+      - '*-?v[0-9]+*'
+
+env: 
+  CARGO_TERM_COLOR: always
+
+jobs:
+  package-crate:
+    runs-on: ubuntu-latest
+    environment: cargo-crate-publish
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@nightly
+      - run: sudo apt-get install -y libzmq3-dev
+      - run: sudo apt-get -y install libasound2-dev
+      - run: sudo apt-get -y install liblttng-ust-dev
+      - run: sudo apt-get -y install libsoapysdr-dev
+      - run: cargo publish   
