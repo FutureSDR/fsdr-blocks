@@ -7,7 +7,10 @@ pub fn bench_char_to_bb(c: &mut Criterion) {
     let mut char_to_bb_function = char_to_bb(samples_per_dot);
 
     let message = "CQ CQ FutureSDR Community Blocks".to_uppercase();
-    let bb = message.chars().flat_map(|c| char_to_bb_function(&c)).collect::<Vec<f32>>();
+    let bb = message
+        .chars()
+        .flat_map(|c| char_to_bb_function(&c))
+        .collect::<Vec<f32>>();
     //println!("BaseBand Vector Length: {}, Content: {:?}", bb.len(), bb);
 
     let mut group = c.benchmark_group("char_to_bb");
@@ -16,7 +19,10 @@ pub fn bench_char_to_bb(c: &mut Criterion) {
 
     group.bench_function(format!("char_to_bb"), |b| {
         b.iter(|| {
-            message.chars().flat_map(|c| char_to_bb_function(&c)).for_each(drop);
+            message
+                .chars()
+                .flat_map(|c| char_to_bb_function(&c))
+                .for_each(drop);
         });
     });
 
@@ -24,7 +30,10 @@ pub fn bench_char_to_bb(c: &mut Criterion) {
 }
 
 pub fn bench_msg_to_cw(c: &mut Criterion) {
-    let message = "CQ CQ FutureSDR Community Blocks".to_uppercase().chars().collect::<Vec<char>>();
+    let message = "CQ CQ FutureSDR Community Blocks"
+        .to_uppercase()
+        .chars()
+        .collect::<Vec<char>>();
     let msg_slice = message.as_slice();
     //println!("Message chars Vector Length: {}, Content: {:?}", msg_slice.len(), msg_slice);
 
@@ -33,7 +42,9 @@ pub fn bench_msg_to_cw(c: &mut Criterion) {
     group.throughput(criterion::Throughput::Elements(msg_slice.len() as u64));
 
     group.bench_function(format!("msg_to_cw"), |b| {
-        b.iter(|| { msg_to_cw(msg_slice); });
+        b.iter(|| {
+            msg_to_cw(msg_slice);
+        });
     });
 
     group.finish();

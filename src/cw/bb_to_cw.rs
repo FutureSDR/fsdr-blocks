@@ -2,7 +2,6 @@ use std::ops::RangeInclusive;
 
 use futuresdr::anyhow::Result;
 use futuresdr::async_trait::async_trait;
-use futuresdr::runtime::{Block, TypedBlock};
 use futuresdr::runtime::BlockMeta;
 use futuresdr::runtime::BlockMetaBuilder;
 use futuresdr::runtime::Kernel;
@@ -11,6 +10,7 @@ use futuresdr::runtime::MessageIoBuilder;
 use futuresdr::runtime::StreamIo;
 use futuresdr::runtime::StreamIoBuilder;
 use futuresdr::runtime::WorkIo;
+use futuresdr::runtime::{Block, TypedBlock};
 
 use crate::cw::shared::CWAlphabet::{self, *};
 
@@ -39,11 +39,15 @@ impl BBToCW {
         accuracy: usize, // 100 = 100% accuracy = How accurate the timeslots for symbols and between symbols have to be kept
         samples_per_dot: usize,
     ) -> TypedBlock<Self> {
-        let tolerance_per_dot = (samples_per_dot as f32 - ((accuracy as f32 / 100.) * samples_per_dot as f32)) as usize;
+        let tolerance_per_dot =
+            (samples_per_dot as f32 - ((accuracy as f32 / 100.) * samples_per_dot as f32)) as usize;
         let dot_range = samples_per_dot - tolerance_per_dot..=samples_per_dot + tolerance_per_dot;
-        let dash_range = 3 * samples_per_dot - tolerance_per_dot..=3 * samples_per_dot + tolerance_per_dot;
-        let letterspace_range = 3 * samples_per_dot - tolerance_per_dot..=3 * samples_per_dot + tolerance_per_dot;
-        let wordspace_range = 7 * samples_per_dot - tolerance_per_dot..=7 * samples_per_dot + tolerance_per_dot;
+        let dash_range =
+            3 * samples_per_dot - tolerance_per_dot..=3 * samples_per_dot + tolerance_per_dot;
+        let letterspace_range =
+            3 * samples_per_dot - tolerance_per_dot..=3 * samples_per_dot + tolerance_per_dot;
+        let wordspace_range =
+            7 * samples_per_dot - tolerance_per_dot..=7 * samples_per_dot + tolerance_per_dot;
 
         /*println!("samples per dot: {}", samples_per_dot);
         println!("dot_range: {:?}", dot_range);
@@ -63,7 +67,7 @@ impl BBToCW {
                 sample_count: 0,
                 power_before: 0.,
                 tolerance_per_dot, // // Tolerance towards the sending end in sticking to the time slots
-                dot_range, // How many samples are still interpreted as a dot
+                dot_range,         // How many samples are still interpreted as a dot
                 dash_range,
                 letterspace_range,
                 wordspace_range,
@@ -97,10 +101,15 @@ impl Kernel for BBToCW {
         for sample in i.iter() {
             let power = (*sample).abs(); //.powi(2); // Not required
 
-            if (power > threshold) && (self.power_before <= threshold) { // Signal is starting
+            if (power > threshold) && (self.power_before <= threshold) {
+                // Signal is starting
                 match self.sample_count {
-                    x if self.wordspace_range.contains(&x) => { symbol = Some(WordSpace); } // Wordspace 7 dots (incl tolerance)
-                    x if self.letterspace_range.contains(&x) => { symbol = Some(LetterSpace); } // Letterspace (Longer than 3 dots (incl tolerance), but shorter than 7 dots (incl tolerance))
+                    x if self.wordspace_range.contains(&x) => {
+                        symbol = Some(WordSpace);
+                    } // Wordspace 7 dots (incl tolerance)
+                    x if self.letterspace_range.contains(&x) => {
+                        symbol = Some(LetterSpace);
+                    } // Letterspace (Longer than 3 dots (incl tolerance), but shorter than 7 dots (incl tolerance))
                     x if self.dot_range.contains(&x) => {} // SymbolSpace (Is a valid symbol)
                     _ => {
                         //info!("Signal pause not a symbol: {} samples", self.sample_count);
@@ -112,10 +121,15 @@ impl Kernel for BBToCW {
                 self.sample_count = 0;
                 end_of_transmission = false;
             }
-            if (power <= threshold) && (self.power_before > threshold) { // Signal is stopping
+            if (power <= threshold) && (self.power_before > threshold) {
+                // Signal is stopping
                 match self.sample_count {
-                    x if self.dot_range.contains(&x) => { symbol = Some(Dot); }
-                    x if self.dash_range.contains(&x) => { symbol = Some(Dash); }
+                    x if self.dot_range.contains(&x) => {
+                        symbol = Some(Dot);
+                    }
+                    x if self.dash_range.contains(&x) => {
+                        symbol = Some(Dash);
+                    }
                     _ => {
                         //info!("Signal length not a symbol: {} samples", self.sample_count);
                     }
@@ -133,7 +147,10 @@ impl Kernel for BBToCW {
             }
 
             // Special Case: No signal has been received for a longer time than a wordspace needs.
-            if self.sample_count > (self.tolerance_per_dot + (7 * self.samples_per_dot)) && !end_of_transmission { // End of transmission
+            if self.sample_count > (self.tolerance_per_dot + (7 * self.samples_per_dot))
+                && !end_of_transmission
+            {
+                // End of transmission
                 //println!("Transmission ended!");
                 end_of_transmission = true;
                 o[produced] = LetterSpace;
@@ -141,7 +158,8 @@ impl Kernel for BBToCW {
                 produced += 2;
             }
 
-            if self.sample_count == usize::MAX { // Dont overflow
+            if self.sample_count == usize::MAX {
+                // Dont overflow
                 self.sample_count = 0;
             }
 
@@ -160,7 +178,6 @@ impl Kernel for BBToCW {
         Ok(())
     }
 }
-
 
 pub struct BBToCWBuilder {
     samles_per_dot: usize,
@@ -192,9 +209,6 @@ impl BBToCWBuilder {
     }
 
     pub fn build(self) -> Block {
-        BBToCW::new(
-            self.accuracy,
-            self.samles_per_dot,
-        )
+        BBToCW::new(self.accuracy, self.samles_per_dot)
     }
 }

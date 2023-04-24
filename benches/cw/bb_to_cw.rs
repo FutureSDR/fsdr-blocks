@@ -1,7 +1,7 @@
 use criterion::{criterion_group, criterion_main, Criterion};
-use futuresdr::runtime::Mocker;
 use fsdr_blocks::cw::bb_to_cw::BBToCW;
 use fsdr_blocks::cw::shared::{char_to_bb, CWAlphabet};
+use futuresdr::runtime::Mocker;
 
 // cargo bench --profile release --bench bb_to_cw
 pub fn bench_bb_to_cw(c: &mut Criterion) {
@@ -9,7 +9,10 @@ pub fn bench_bb_to_cw(c: &mut Criterion) {
     let mut char_to_bb_function = char_to_bb(samples_per_dot);
 
     let message = "CQ CQ FutureSDR Community Blocks".to_uppercase();
-    let bb = message.chars().flat_map(|c| char_to_bb_function(&c)).collect::<Vec<f32>>();
+    let bb = message
+        .chars()
+        .flat_map(|c| char_to_bb_function(&c))
+        .collect::<Vec<f32>>();
     //println!("BaseBand Vector Length: {}, Content: {:?}", bb.len(), bb);
 
     let mut group = c.benchmark_group("crossbeam_sink");
@@ -29,7 +32,6 @@ pub fn bench_bb_to_cw(c: &mut Criterion) {
 
     group.finish();
 }
-
 
 criterion_group!(benches, bench_bb_to_cw);
 criterion_main!(benches);

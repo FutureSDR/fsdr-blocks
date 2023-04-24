@@ -1,8 +1,7 @@
 use crossbeam_channel::Sender;
-use futuresdr::async_trait::async_trait;
 use futuresdr::anyhow::Result;
+use futuresdr::async_trait::async_trait;
 use futuresdr::log::info;
-use futuresdr::runtime::{Block, TypedBlock};
 use futuresdr::runtime::BlockMeta;
 use futuresdr::runtime::BlockMetaBuilder;
 use futuresdr::runtime::Kernel;
@@ -11,6 +10,7 @@ use futuresdr::runtime::MessageIoBuilder;
 use futuresdr::runtime::StreamIo;
 use futuresdr::runtime::StreamIoBuilder;
 use futuresdr::runtime::WorkIo;
+use futuresdr::runtime::{Block, TypedBlock};
 
 /// Push samples originating from a stream in a flowgraph into a crossbeam channel.
 ///
@@ -42,7 +42,6 @@ pub struct CrossbeamSink<T: Send + Copy + 'static> {
 }
 
 impl<T: Send + Copy + 'static> CrossbeamSink<T> {
-
     pub fn new(sender: Sender<Box<[T]>>) -> Block {
         Block::from_typed(Self::new_typed(sender))
     }
@@ -52,9 +51,7 @@ impl<T: Send + Copy + 'static> CrossbeamSink<T> {
             BlockMetaBuilder::new("CrossbeamSink").build(),
             StreamIoBuilder::new().add_input::<T>("in").build(),
             MessageIoBuilder::<Self>::new().build(),
-            CrossbeamSink::<T> {
-                sender,
-            },
+            CrossbeamSink::<T> { sender },
         )
     }
 }
@@ -72,14 +69,14 @@ impl<T: Send + Copy + 'static> Kernel for CrossbeamSink<T> {
         let i = sio.input(0).slice::<T>();
 
         if !i.is_empty() {
-                match self.sender.try_send(i.into()) {
-                    Ok(_) => {
-                        info!("sent data...");
-                    }
-                    Err(err) => {
-                        info!("{}", err.to_string());
-                    }
+            match self.sender.try_send(i.into()) {
+                Ok(_) => {
+                    info!("sent data...");
                 }
+                Err(err) => {
+                    info!("{}", err.to_string());
+                }
+            }
             sio.input(0).consume(i.len());
         }
 

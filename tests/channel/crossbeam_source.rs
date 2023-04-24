@@ -1,6 +1,6 @@
-use futuresdr::anyhow::Result;
 use crossbeam_channel;
 use fsdr_blocks::channel::CrossbeamSource;
+use futuresdr::anyhow::Result;
 use futuresdr::blocks::{Head, VectorSink, VectorSinkBuilder};
 use futuresdr::log::debug;
 use futuresdr::macros::connect;

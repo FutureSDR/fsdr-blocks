@@ -1,5 +1,5 @@
-use std::fmt;
 use bimap::BiMap;
+use std::fmt;
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
 pub enum CWAlphabet {

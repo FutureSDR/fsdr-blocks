@@ -1,8 +1,7 @@
 use crossbeam_channel::{Receiver, TryRecvError};
-use futuresdr::async_trait::async_trait;
 use futuresdr::anyhow::Result;
+use futuresdr::async_trait::async_trait;
 use futuresdr::log::debug;
-use futuresdr::runtime::{Block, TypedBlock};
 use futuresdr::runtime::BlockMeta;
 use futuresdr::runtime::BlockMetaBuilder;
 use futuresdr::runtime::Kernel;
@@ -11,6 +10,7 @@ use futuresdr::runtime::MessageIoBuilder;
 use futuresdr::runtime::StreamIo;
 use futuresdr::runtime::StreamIoBuilder;
 use futuresdr::runtime::WorkIo;
+use futuresdr::runtime::{Block, TypedBlock};
 
 /// Push samples from a channel into a flowgraph stream connection.
 ///
@@ -92,7 +92,8 @@ impl<T: Send + 'static> Kernel for CrossbeamSource<T> {
         }
 
         if self.current.is_none() {
-            match self.receiver.try_recv() { //.by_ref().next().await {
+            match self.receiver.try_recv() {
+                //.by_ref().next().await {
                 Ok(data) => {
                     debug!("received data chunk on channel");
                     self.current = Some((data, 0));

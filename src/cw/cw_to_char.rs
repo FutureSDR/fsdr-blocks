@@ -1,6 +1,5 @@
 use futuresdr::anyhow::Result;
 use futuresdr::async_trait::async_trait;
-use futuresdr::runtime::{Block, TypedBlock};
 use futuresdr::runtime::BlockMeta;
 use futuresdr::runtime::BlockMetaBuilder;
 use futuresdr::runtime::Kernel;
@@ -9,11 +8,12 @@ use futuresdr::runtime::MessageIoBuilder;
 use futuresdr::runtime::StreamIo;
 use futuresdr::runtime::StreamIoBuilder;
 use futuresdr::runtime::WorkIo;
+use futuresdr::runtime::{Block, TypedBlock};
 
+use crate::cw::shared::get_alphabet;
+use crate::cw::shared::CWAlphabet::{self, LetterSpace, WordSpace};
 use bimap::BiMap;
 use futuresdr::log::info;
-use crate::cw::shared::CWAlphabet::{self, LetterSpace, WordSpace};
-use crate::cw::shared::get_alphabet;
 
 pub struct CWToChar {
     symbol_vec: Vec<CWAlphabet>,
@@ -38,7 +38,7 @@ impl CWToChar {
             CWToChar {
                 symbol_vec: vec![],
                 alphabet,
-                workfn
+                workfn,
             },
         )
     }
@@ -59,14 +59,18 @@ impl CWToChar {
         let mut produced = 0;
 
         // Variant 1
-        for (index, c) in i.split_inclusive(|c| c == &LetterSpace || c == &WordSpace)
+        for (index, c) in i
+            .split_inclusive(|c| c == &LetterSpace || c == &WordSpace)
             .filter_map(|c| c.split_last())
-            .map(|(last, elements)| if last == &WordSpace {
-                *self.alphabet.get_by_right(&vec![WordSpace]).unwrap_or(&'_')
-            } else {
-                *self.alphabet.get_by_right(elements).unwrap_or(&'_')
+            .map(|(last, elements)| {
+                if last == &WordSpace {
+                    *self.alphabet.get_by_right(&vec![WordSpace]).unwrap_or(&'_')
+                } else {
+                    *self.alphabet.get_by_right(elements).unwrap_or(&'_')
+                }
             })
-            .enumerate() {
+            .enumerate()
+        {
             o[index] = c;
             produced = index + 1;
         }
@@ -101,7 +105,9 @@ impl CWToChar {
         for v in i.iter() {
             info!(": {}", v);
             match v {
-                CWAlphabet::Dot | CWAlphabet::Dash => { self.symbol_vec.push(*v); }
+                CWAlphabet::Dot | CWAlphabet::Dash => {
+                    self.symbol_vec.push(*v);
+                }
                 LetterSpace => {
                     if let Some(character) = self.alphabet.get_by_right(&self.symbol_vec) {
                         o[produced] = *character;
@@ -127,7 +133,6 @@ impl CWToChar {
             }
             consumed += 1;
         }
-
 
         sio.input(0).consume(consumed);
         sio.output(0).produce(produced);
@@ -169,7 +174,8 @@ impl CWToChar {
                 }
                 self.symbol_vec.clear();
 
-                if *v == WordSpace { // Special case if sequence of pulse codes is not followed by a LetterSpace but a WordSpace
+                if *v == WordSpace {
+                    // Special case if sequence of pulse codes is not followed by a LetterSpace but a WordSpace
                     self.symbol_vec.push(*v);
                     if let Some(character) = self.alphabet.get_by_right(&self.symbol_vec) {
                         o[produced] = *character;
@@ -180,7 +186,6 @@ impl CWToChar {
             }
             consumed += 1;
         }
-
 
         sio.input(0).consume(consumed);
         sio.output(0).produce(produced);
@@ -204,13 +209,12 @@ impl Kernel for CWToChar {
         _meta: &mut BlockMeta,
     ) -> Result<()> {
         match self.workfn {
-            2 => { self.work2(io, sio, _mio, _meta).await }
-            3 => { self.work3(io, sio, _mio, _meta).await }
-            _ => { self.work1(io, sio, _mio, _meta).await }
+            2 => self.work2(io, sio, _mio, _meta).await,
+            3 => self.work3(io, sio, _mio, _meta).await,
+            _ => self.work1(io, sio, _mio, _meta).await,
         }
     }
 }
-
 
 pub struct CWToCharBuilder {
     alphabet: BiMap<char, Vec<CWAlphabet>>,
@@ -235,8 +239,6 @@ impl CWToCharBuilder {
     }*/
 
     pub fn build(self) -> Block {
-        CWToChar::new(
-            self.alphabet,
-        )
+        CWToChar::new(self.alphabet)
     }
 }

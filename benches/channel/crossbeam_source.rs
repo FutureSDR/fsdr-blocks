@@ -1,7 +1,7 @@
 use criterion::{criterion_group, criterion_main, Criterion};
-use rand::Rng;
-use futuresdr::runtime::Mocker;
 use fsdr_blocks::channel::CrossbeamSource;
+use futuresdr::runtime::Mocker;
+use rand::Rng;
 
 /// This benchmark seems to highly depend on the underlying scheduling of polling from the channel
 pub fn crossbeam_source_boxed_slice_u32(c: &mut Criterion) {

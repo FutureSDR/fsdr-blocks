@@ -5,7 +5,6 @@ use futuresdr::macros::connect;
 use futuresdr::runtime::Flowgraph;
 use futuresdr::runtime::Runtime;
 
-
 #[test]
 fn crossbeam_sink_f32() -> Result<()> {
     let mut fg = Flowgraph::new();
