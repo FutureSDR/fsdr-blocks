@@ -4,6 +4,8 @@
 #[macro_use]
 pub extern crate async_trait;
 
+pub mod channel;
+pub mod cw;
 pub mod math;
 pub mod stdinout;
 pub mod stream;

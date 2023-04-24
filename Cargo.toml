@@ -13,10 +13,41 @@ readme = "README.md"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-futuresdr = { git="https://github.com/FutureSDR/FutureSDR", version = "0.0"}
-async-trait = "0.1.52"
+futuresdr = { git = "https://github.com/FutureSDR/FutureSDR", branch = "main" }
+async-trait = "0.1.68"
+crossbeam-channel = "0.5.8"
+bimap = "0.6.3"
+
+[dev-dependencies]
+criterion = { version = "0.4.0", features = ["html_reports"] }
+rand = { version = "0.8.5" }
 
 [workspace]
 members = [
     ".",
 ]
+
+[[bench]]
+name = "crossbeam_sink"
+path = "benches/channel/crossbeam_sink.rs"
+harness = false
+
+[[bench]]
+name = "crossbeam_source"
+path = "benches/channel/crossbeam_source.rs"
+harness = false
+
+[[bench]]
+name = "cw_to_char"
+path = "benches/cw/cw_to_char.rs"
+harness = false
+
+[[bench]]
+name = "bb_to_cw"
+path = "benches/cw/bb_to_cw.rs"
+harness = false
+
+[[bench]]
+name = "shared"
+path = "benches/cw/shared.rs"
+harness = false
