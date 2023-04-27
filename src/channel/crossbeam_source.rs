@@ -59,6 +59,7 @@ pub struct CrossbeamSource<T: Send + 'static> {
 }
 
 impl<T: Send + 'static> CrossbeamSource<T> {
+    #[allow(clippy::new_ret_no_self)]
     pub fn new(receiver: Receiver<Box<[T]>>) -> Block {
         Block::from_typed(Self::new_typed(receiver))
     }

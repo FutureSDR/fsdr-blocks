@@ -42,6 +42,7 @@ pub struct CrossbeamSink<T: Send + Copy + 'static> {
 }
 
 impl<T: Send + Copy + 'static> CrossbeamSink<T> {
+    #[allow(clippy::new_ret_no_self)]
     pub fn new(sender: Sender<Box<[T]>>) -> Block {
         Block::from_typed(Self::new_typed(sender))
     }

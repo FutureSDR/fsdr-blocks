@@ -86,9 +86,9 @@ pub fn get_alphabet() -> BiMap<char, Vec<CWAlphabet>> {
 ///
 /// # Usage
 /// ```
-/// use fsdr_blocks::cw::shared::char_to_bb;
+/// use fsdr_blocks::cw::shared::char_to_baseband;
 ///
-/// let mut ctbb = char_to_bb(1);///
+/// let mut ctbb = char_to_baseband(1);///
 /// let s = ctbb(&'S'); // Dots
 /// //println!("{:?}", s);
 /// assert_eq!(vec![1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0], s);
@@ -107,7 +107,7 @@ pub fn get_alphabet() -> BiMap<char, Vec<CWAlphabet>> {
 ///
 /// // No testcase for Letterspace in char -> Should panic
 /// ```
-pub fn char_to_bb(samles_per_dot: usize) -> impl FnMut(&char) -> Vec<f32> {
+pub fn char_to_baseband(samles_per_dot: usize) -> impl FnMut(&char) -> Vec<f32> {
     use CWAlphabet::*;
     let alphabet = get_alphabet();
 

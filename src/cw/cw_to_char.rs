@@ -23,6 +23,7 @@ pub struct CWToChar {
 }
 
 impl CWToChar {
+    #[allow(clippy::new_ret_no_self)]
     pub fn new(alphabet: BiMap<char, Vec<CWAlphabet>>) -> Block {
         Block::from_typed(Self::new_typed(alphabet, 1))
     }

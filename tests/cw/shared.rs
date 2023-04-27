@@ -1,11 +1,11 @@
 use fsdr_blocks::cw::shared::CWAlphabet::*;
-use fsdr_blocks::cw::shared::{char_to_bb, msg_to_cw};
+use fsdr_blocks::cw::shared::{char_to_baseband, msg_to_cw};
 use futuresdr::anyhow::Result;
 
 // cargo nextest run test_char_to_bb --no-capture
 #[test]
-fn test_char_to_bb() -> Result<()> {
-    let mut ctbb = char_to_bb(1);
+fn test_char_to_baseband() -> Result<()> {
+    let mut ctbb = char_to_baseband(1);
 
     let s = ctbb(&'S'); // Dots
                         //println!("{:?}", s);
@@ -53,7 +53,7 @@ fn test_msg_to_cw() -> Result<()> {
             Dot,
             Dot,
             Dot,
-            LetterSpace
+            LetterSpace,
         ],
         cw
     );

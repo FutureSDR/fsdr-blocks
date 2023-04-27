@@ -1,19 +1,19 @@
 use criterion::{criterion_group, criterion_main, Criterion};
-use fsdr_blocks::cw::shared::{char_to_bb, msg_to_cw};
+use fsdr_blocks::cw::shared::{char_to_baseband, msg_to_cw};
 
 // cargo bench --profile release --bench shared
-pub fn bench_char_to_bb(c: &mut Criterion) {
+pub fn bench_char_to_baseband(c: &mut Criterion) {
     let samples_per_dot = 16384;
-    let mut char_to_bb_function = char_to_bb(samples_per_dot);
+    let mut char_to_baseband_function = char_to_baseband(samples_per_dot);
 
     let message = "CQ CQ FutureSDR Community Blocks".to_uppercase();
     let bb = message
         .chars()
-        .flat_map(|c| char_to_bb_function(&c))
+        .flat_map(|c| char_to_baseband_function(&c))
         .collect::<Vec<f32>>();
     //println!("BaseBand Vector Length: {}, Content: {:?}", bb.len(), bb);
 
-    let mut group = c.benchmark_group("char_to_bb");
+    let mut group = c.benchmark_group("char_to_baseband");
 
     group.throughput(criterion::Throughput::Elements(bb.len() as u64));
 
@@ -21,7 +21,7 @@ pub fn bench_char_to_bb(c: &mut Criterion) {
         b.iter(|| {
             message
                 .chars()
-                .flat_map(|c| char_to_bb_function(&c))
+                .flat_map(|c| char_to_baseband_function(&c))
                 .for_each(drop);
         });
     });
@@ -50,5 +50,5 @@ pub fn bench_msg_to_cw(c: &mut Criterion) {
     group.finish();
 }
 
-criterion_group!(benches, bench_char_to_bb, bench_msg_to_cw);
+criterion_group!(benches, bench_char_to_baseband, bench_msg_to_cw);
 criterion_main!(benches);

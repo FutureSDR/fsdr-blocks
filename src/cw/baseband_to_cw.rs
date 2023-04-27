@@ -14,7 +14,7 @@ use futuresdr::runtime::{Block, TypedBlock};
 
 use crate::cw::shared::CWAlphabet::{self, *};
 
-pub struct BBToCW {
+pub struct BaseBandToCW {
     samples_per_dot: usize,
     sample_count: usize,
     power_before: f32,
@@ -27,7 +27,8 @@ pub struct BBToCW {
     wordspace_range: RangeInclusive<usize>,
 }
 
-impl BBToCW {
+impl BaseBandToCW {
+    #[allow(clippy::new_ret_no_self)]
     pub fn new(
         accuracy: usize, // 100 = 100% accuracy = How accurate the timeslots for symbols and between symbols have to be kept
         samples_per_dot: usize,
@@ -62,7 +63,7 @@ impl BBToCW {
                 .add_output::<CWAlphabet>("out")
                 .build(),
             MessageIoBuilder::new().build(),
-            BBToCW {
+            BaseBandToCW {
                 samples_per_dot,
                 sample_count: 0,
                 power_before: 0.,
@@ -78,7 +79,7 @@ impl BBToCW {
 
 #[doc(hidden)]
 #[async_trait]
-impl Kernel for BBToCW {
+impl Kernel for BaseBandToCW {
     async fn work(
         &mut self,
         io: &mut WorkIo,
@@ -179,36 +180,36 @@ impl Kernel for BBToCW {
     }
 }
 
-pub struct BBToCWBuilder {
+pub struct BaseBandToCWBuilder {
     samles_per_dot: usize,
     accuracy: usize,
 }
 
-impl Default for BBToCWBuilder {
+impl Default for BaseBandToCWBuilder {
     fn default() -> Self {
-        BBToCWBuilder {
+        BaseBandToCWBuilder {
             samles_per_dot: 60,
             accuracy: 90,
         }
     }
 }
 
-impl BBToCWBuilder {
-    pub fn new() -> BBToCWBuilder {
-        BBToCWBuilder::default()
+impl BaseBandToCWBuilder {
+    pub fn new() -> BaseBandToCWBuilder {
+        BaseBandToCWBuilder::default()
     }
 
-    pub fn samples_per_dot(mut self, samles_per_dot: usize) -> BBToCWBuilder {
+    pub fn samples_per_dot(mut self, samles_per_dot: usize) -> BaseBandToCWBuilder {
         self.samles_per_dot = samles_per_dot;
         self
     }
 
-    pub fn accuracy(mut self, accuracy: usize) -> BBToCWBuilder {
+    pub fn accuracy(mut self, accuracy: usize) -> BaseBandToCWBuilder {
         self.accuracy = accuracy;
         self
     }
 
     pub fn build(self) -> Block {
-        BBToCW::new(self.accuracy, self.samles_per_dot)
+        BaseBandToCW::new(self.accuracy, self.samles_per_dot)
     }
 }

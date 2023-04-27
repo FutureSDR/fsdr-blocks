@@ -4,8 +4,12 @@
 #[macro_use]
 pub extern crate async_trait;
 
+#[cfg(feature = "crossbeam")]
 pub mod channel;
+
+#[cfg(feature = "cw")]
 pub mod cw;
+
 pub mod math;
 pub mod stdinout;
 pub mod stream;

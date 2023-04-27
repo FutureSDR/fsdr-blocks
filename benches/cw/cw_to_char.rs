@@ -38,28 +38,6 @@ pub fn bench_cw_to_char(c: &mut Criterion) {
             mocker.init_output::<char>(0, cw.len());
             mocker.run();
         });
-    });
-
-    group.bench_function(format!("mock-cw-to-char-2"), |b| {
-        b.iter(|| {
-            let block = CWToChar::new_typed(get_alphabet(), 2);
-            let mut mocker = Mocker::new(block);
-
-            mocker.input(0, cw.clone());
-            mocker.init_output::<char>(0, cw.len());
-            mocker.run();
-        });
-    });
-
-    group.bench_function(format!("mock-cw-to-char-3"), |b| {
-        b.iter(|| {
-            let block = CWToChar::new_typed(get_alphabet(), 3);
-            let mut mocker = Mocker::new(block);
-
-            mocker.input(0, cw.clone());
-            mocker.init_output::<char>(0, cw.len());
-            mocker.run();
-        });
     });*/
 
     group.finish();
