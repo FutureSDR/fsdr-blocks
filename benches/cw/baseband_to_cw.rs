@@ -3,7 +3,7 @@ use fsdr_blocks::cw::baseband_to_cw::BaseBandToCW;
 use fsdr_blocks::cw::shared::{char_to_baseband, CWAlphabet};
 use futuresdr::runtime::Mocker;
 
-// cargo bench --profile release --bench bb_to_cw
+// cargo bench --profile release --bench bb_to_cw --features="cw"
 pub fn bench_baseband_to_cw(c: &mut Criterion) {
     let samples_per_dot = 1;
     let mut char_to_baseband_function = char_to_baseband(samples_per_dot);

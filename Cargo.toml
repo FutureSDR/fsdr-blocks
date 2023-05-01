@@ -14,6 +14,7 @@ readme = "README.md"
 
 [dependencies]
 futuresdr = { git = "https://github.com/FutureSDR/FutureSDR", branch = "main" }
+#futuresdr = { version="0.0.32" }
 async-trait = "0.1.68"
 crossbeam-channel = { version = "0.5.8", optional = true }
 bimap = { version = "0.6.3", optional = true }
