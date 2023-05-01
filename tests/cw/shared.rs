@@ -2,7 +2,7 @@ use fsdr_blocks::cw::shared::CWAlphabet::*;
 use fsdr_blocks::cw::shared::{char_to_baseband, msg_to_cw};
 use futuresdr::anyhow::Result;
 
-// cargo nextest run test_char_to_bb --no-capture
+// cargo nextest run test_char_to_baseband --no-capture
 #[test]
 fn test_char_to_baseband() -> Result<()> {
     let mut ctbb = char_to_baseband(1);
@@ -31,6 +31,7 @@ fn test_char_to_baseband() -> Result<()> {
     Ok(())
 }
 
+// cargo nextest run test_msg_to_cw --no-capture
 #[test]
 fn test_msg_to_cw() -> Result<()> {
     let message = "S O__S".to_uppercase().chars().collect::<Vec<char>>();
@@ -60,6 +61,7 @@ fn test_msg_to_cw() -> Result<()> {
     Ok(())
 }
 
+// cargo nextest run test_display_trait_impl --no-capture
 #[test]
 fn test_display_trait_impl() {
     let testdata = vec![Dash, Dot, LetterSpace, Unknown, Dot, WordSpace, Dash];

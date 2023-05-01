@@ -50,11 +50,11 @@ impl BaseBandToCW {
         let wordspace_range =
             7 * samples_per_dot - tolerance_per_dot..=7 * samples_per_dot + tolerance_per_dot;
 
-        /*println!("samples per dot: {}", samples_per_dot);
+        println!("samples per dot: {}", samples_per_dot);
         println!("dot_range: {:?}", dot_range);
         println!("dash_range: {:?}", dash_range);
         println!("letterspace_range: {:?}", letterspace_range);
-        println!("wordspace_range: {:?}", wordspace_range);*/
+        println!("wordspace_range: {:?}", wordspace_range);
 
         TypedBlock::new(
             BlockMetaBuilder::new("BBToCW").build(),
@@ -117,7 +117,11 @@ impl Kernel for BaseBandToCW {
                     }
                 }
 
-                //info!("Signal was paused for: {} -> {:?}", self.sample_count, symbol.or(None));
+                println!(
+                    "Signal was paused for: {} -> {:?}",
+                    self.sample_count,
+                    symbol.or(None)
+                );
 
                 self.sample_count = 0;
                 end_of_transmission = false;
@@ -136,7 +140,11 @@ impl Kernel for BaseBandToCW {
                     }
                 }
 
-                //info!("Signal was present for: {} -> {:?}", self.sample_count, symbol.or(None));
+                println!(
+                    "Signal was present for: {} -> {:?}",
+                    self.sample_count,
+                    symbol.or(None)
+                );
 
                 self.sample_count = 0;
             }

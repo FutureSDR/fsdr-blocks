@@ -1,7 +1,7 @@
 use criterion::{criterion_group, criterion_main, Criterion};
 use fsdr_blocks::cw::shared::{char_to_baseband, msg_to_cw};
 
-// cargo bench --profile release --bench shared
+// cargo bench --profile release --bench shared --features="cw"
 pub fn bench_char_to_baseband(c: &mut Criterion) {
     let samples_per_dot = 16384;
     let mut char_to_baseband_function = char_to_baseband(samples_per_dot);
@@ -29,6 +29,7 @@ pub fn bench_char_to_baseband(c: &mut Criterion) {
     group.finish();
 }
 
+// cargo bench --profile release --bench shared --features="cw"
 pub fn bench_msg_to_cw(c: &mut Criterion) {
     let message = "CQ CQ FutureSDR Community Blocks"
         .to_uppercase()

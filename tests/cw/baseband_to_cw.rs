@@ -6,6 +6,7 @@ use futuresdr::blocks::{VectorSink, VectorSinkBuilder, VectorSource};
 use futuresdr::macros::connect;
 use futuresdr::runtime::{Flowgraph, Runtime};
 
+// cargo nextest run test_baseband_to_cw --no-capture
 #[test]
 fn test_baseband_to_cw() -> Result<()> {
     let mut fg = Flowgraph::new();
