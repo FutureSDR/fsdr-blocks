@@ -4,4 +4,5 @@ mod channel;
 mod cw;
 
 mod math;
+mod sigmf;
 mod stream;
