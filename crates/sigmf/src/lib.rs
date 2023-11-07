@@ -4,6 +4,10 @@ extern crate serde_derive;
 extern crate serde;
 extern crate serde_json;
 
+#[cfg(test)]
+#[macro_use(quickcheck)]
+extern crate quickcheck_macros;
+
 mod errors;
 pub use errors::SigMFError;
 
@@ -15,6 +19,9 @@ pub use capture::Capture;
 
 mod collection;
 pub use collection::Collection;
+
+mod dataset_format;
+pub use dataset_format::{DatasetFormat, DatasetFormatBuilder};
 
 mod description;
 pub use description::Description;

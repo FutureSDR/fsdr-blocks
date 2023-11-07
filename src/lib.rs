@@ -6,11 +6,6 @@ pub extern crate async_trait;
 
 #[cfg(feature = "crossbeam")]
 pub mod channel;
-#[macro_use]
-extern crate serde_derive;
-
-extern crate serde;
-extern crate serde_json;
 
 #[cfg(feature = "cw")]
 pub mod cw;

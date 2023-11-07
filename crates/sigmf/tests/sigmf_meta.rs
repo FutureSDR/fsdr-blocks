@@ -14,7 +14,7 @@ fn parse_mandatory() -> Result<(), SigMFError> {
     let description: Description = serde_json::from_str(&metadata)?;
     let global = description.global()?;
     assert_eq!("1.0.0", global.version()?);
-    assert_eq!("cu8", global.datatype()?);
+    assert_eq!("cu8", global.datatype()?.to_string());
     assert_eq!(0, description.annotations()?.len());
     assert_eq!(0, description.captures()?.len());
     Ok(())
@@ -25,7 +25,7 @@ fn parse_example_from_spec() -> Result<(), SigMFError> {
     let metadata = r#"
 {
     "global": {
-        "core:datatype": "u8",
+        "core:datatype": "ru8",
         "core:version": "1.0.0",
         "core:dataset": "non-conforming-dataset-01.dat"
     },
@@ -44,7 +44,7 @@ fn parse_example_from_spec() -> Result<(), SigMFError> {
     let description: Description = serde_json::from_str(&metadata)?;
     let global = description.global()?;
     assert_eq!("1.0.0", global.version()?);
-    assert_eq!("u8", global.datatype()?);
+    assert_eq!("ru8", global.datatype()?.to_string());
     assert_eq!(0, description.annotations()?.len());
     assert_eq!(2, description.captures()?.len());
     Ok(())

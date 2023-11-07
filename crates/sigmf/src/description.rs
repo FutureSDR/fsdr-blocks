@@ -1,4 +1,4 @@
-use crate::{Global, Annotation, Capture, Collection, SigMFError};
+use crate::{Global, Annotation, Capture, Collection, SigMFError, DatasetFormat};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Description {
@@ -9,7 +9,7 @@ pub struct Description {
     #[serde(rename = "captures", skip_serializing_if = "Option::is_none")]
     pub captures: Option<Vec<Capture>>,
     #[serde(rename = "collections", skip_serializing_if = "Option::is_none")]
-    pub collections: Option<Collection>,
+    pub collections: Option<Vec<Collection>>,
 }
 
 impl Description {
@@ -32,5 +32,38 @@ impl Description {
             return Ok(&captures)
         }
         return Err(SigMFError::MissingMandatoryField("captures"))
+    }
+}
+
+impl Default for Description {
+    fn default() -> Self {
+        Self {
+            global: Some(Global::default()),
+            annotations: Some(Vec::new()),
+            captures: Some(Vec::new()),
+            collections: Some(Vec::new()),
+        }
+    }
+}
+
+pub struct DescriptionBuilder(Description);
+
+impl Default for DescriptionBuilder {
+    fn default() -> Self {
+        Self(Description::default())
+    }
+}
+
+// impl  DescriptionBuilder {
+//     pub fn Datatype(datatype: &str) -> DescriptionBuilder {
+
+//     }
+// }
+
+impl From<DatasetFormat> for DescriptionBuilder {
+    fn from(value: DatasetFormat) -> Self {
+        let mut desc = DescriptionBuilder::default();
+        desc.0.global = Some(Global { datatype: Some(value), version: Some("1.0.0".to_string())});
+        desc
     }
 }
