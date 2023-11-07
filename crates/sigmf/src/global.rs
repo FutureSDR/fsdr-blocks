@@ -1,4 +1,4 @@
-use futuresdr::anyhow::{Result, anyhow};
+use crate::errors::SigMFError;
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Global {
@@ -9,17 +9,17 @@ pub struct Global {
 }
 
 impl Global {
-    pub fn version(&self) -> Result<&String> {
+    pub fn version(&self) -> Result<&String, SigMFError> {
         if let Some(version) = &self.version {
             return Ok(&version)
         }
-        return Err(anyhow!("version is unset (while being mandatory)"))
+        return Err(SigMFError::MissingMandatoryField("version"))
     }
 
-    pub fn datatype(&self) -> Result<&String> {
+    pub fn datatype(&self) -> Result<&String, SigMFError> {
         if let Some(datatype) = &self.datatype {
             return Ok(&datatype)
         }
-        return Err(anyhow!("datatype is unset (while being mandatory)"))
+        return Err(SigMFError::MissingMandatoryField("datatype"))
     }
 }

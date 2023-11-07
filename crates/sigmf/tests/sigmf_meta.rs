@@ -1,8 +1,7 @@
-use fsdr_blocks::sigmf::Description;
-use futuresdr::anyhow::Result;
+use sigmf::{Description, SigMFError};
 
 #[test]
-fn parse_mandatory() -> Result<()> {
+fn parse_mandatory() -> Result<(), SigMFError> {
     let metadata = r#"{
     "global": {
         "core:datatype": "cu8",

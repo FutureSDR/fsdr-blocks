@@ -1,0 +1,21 @@
+[package]
+name = "sigmf"
+version = "0.1.0"
+edition = "2021"
+authors = ["FutureSDR Contributors <team@futuresdr.org>", "Loïc Fejoz <loic@fejoz.net>"]
+license = "Apache-2.0 or MIT"
+repository = "https://github.com/futuresdr/fsdr-blocks/"
+description = "Crate for interfacing to SigMF files"
+keywords = ["sdr", "radio", "dsp", "sigmf", "fileformat"]
+categories = ["science"]
+readme = "README.md"
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+serde = "^1.0"
+serde_derive = "^1.0"
+serde_json = "^1.0"
+thiserror = "1.0.50"
+
+[build-dependencies]
+rustc_version = "0.4.0"

@@ -1,5 +1,4 @@
-use crate::sigmf::{Global, Annotation, Capture, Collection};
-use futuresdr::anyhow::{Result, anyhow};
+use crate::{Global, Annotation, Capture, Collection, SigMFError};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Description {
@@ -14,10 +13,10 @@ pub struct Description {
 }
 
 impl Description {
-    pub fn global(&self) -> Result<&Global> {
+    pub fn global(&self) -> Result<&Global, SigMFError> {
         if let Some(global) = &self.global {
             return Ok(&global)
         }
-        return Err(anyhow!("global is unset (while being mandatory)"))
+        return Err(SigMFError::MissingMandatoryField("global"))
     }
 }

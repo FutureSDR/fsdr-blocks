@@ -12,15 +12,18 @@ categories = ["asynchronous", "concurrency", "hardware-support", "science"]
 readme = "README.md"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[workspace]
+members = [
+    ".",
+    "crates/sigmf",
+]
+
 [dependencies]
 futuresdr = { git = "https://github.com/FutureSDR/FutureSDR", branch = "main" }
 #futuresdr = { version="0.0.32" }
 async-trait = "0.1.68"
 crossbeam-channel = { version = "0.5.8", optional = true }
 bimap = { version = "0.6.3", optional = true }
-serde = "^1.0"
-serde_derive = "^1.0"
-serde_json = "^1.0"
 
 [dev-dependencies]
 criterion = { version = "0.4.0", features = ["html_reports"] }
@@ -30,11 +33,6 @@ rand = { version = "0.8.5" }
 default = []
 crossbeam = ["dep:crossbeam-channel"]
 cw = ["dep:bimap"]
-
-[workspace]
-members = [
-    ".",
-]
 
 [[bench]]
 name = "crossbeam_sink"
