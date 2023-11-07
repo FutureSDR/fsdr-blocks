@@ -19,4 +19,18 @@ impl Description {
         }
         return Err(SigMFError::MissingMandatoryField("global"))
     }
+
+    pub fn annotations(&self) -> Result<&Vec<Annotation>, SigMFError> {
+        if let Some(annotations) = &self.annotations {
+            return Ok(&annotations)
+        }
+        return Err(SigMFError::MissingMandatoryField("annotations"))
+    }
+
+    pub fn captures(&self) -> Result<&Vec<Capture>, SigMFError> {
+        if let Some(captures) = &self.captures {
+            return Ok(&captures)
+        }
+        return Err(SigMFError::MissingMandatoryField("captures"))
+    }
 }
