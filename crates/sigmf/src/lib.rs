@@ -4,10 +4,6 @@ extern crate serde_derive;
 extern crate serde;
 extern crate serde_json;
 
-#[cfg(test)]
-#[macro_use(quickcheck)]
-extern crate quickcheck_macros;
-
 mod errors;
 pub use errors::SigMFError;
 

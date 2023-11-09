@@ -11,15 +11,19 @@ categories = ["science"]
 readme = "README.md"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[features]
+quickcheck=['dep:quickcheck']
+
 [dependencies]
 serde = "^1.0"
 serde_derive = "^1.0"
 serde_json = "^1.0"
 thiserror = "1.0.50"
+quickcheck = {version = "1.0.3", optional = true}
 
 [build-dependencies]
 rustc_version = "0.4.0"
 
 [dev-dependencies]
-quickcheck = "1.0.3"
 quickcheck_macros = "1"
+sigmf = {features = ["quickcheck"], path="."}
