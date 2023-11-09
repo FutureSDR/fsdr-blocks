@@ -1,4 +1,4 @@
-use sigmf::{Description, SigMFError};
+use sigmf::{DatasetFormatBuilder, Description, SigMFError};
 
 #[test]
 fn parse_mandatory() -> Result<(), SigMFError> {
@@ -15,6 +15,10 @@ fn parse_mandatory() -> Result<(), SigMFError> {
     let global = description.global()?;
     assert_eq!("1.0.0", global.version()?);
     assert_eq!("cu8", global.datatype()?.to_string());
+    assert_eq!(
+        *global.datatype()?,
+        DatasetFormatBuilder::<u8>::complex().build()
+    );
     assert_eq!(0, description.annotations()?.len());
     assert_eq!(0, description.captures()?.len());
     Ok(())
@@ -45,12 +49,14 @@ fn parse_example_from_spec() -> Result<(), SigMFError> {
     let global = description.global()?;
     assert_eq!("1.0.0", global.version()?);
     assert_eq!("ru8", global.datatype()?.to_string());
+    assert_eq!(
+        *global.datatype()?,
+        DatasetFormatBuilder::<u8>::real().build()
+    );
     assert_eq!(0, description.annotations()?.len());
     assert_eq!(2, description.captures()?.len());
     Ok(())
 }
-
-
 
 // {
 //     "global": {

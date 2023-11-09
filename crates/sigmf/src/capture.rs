@@ -1,4 +1,2 @@
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-pub struct Capture {
-    
-}
+pub struct Capture {}
