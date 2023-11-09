@@ -13,6 +13,7 @@ readme = "README.md"
 
 [features]
 quickcheck=['dep:quickcheck']
+build-binary=['dep:clap', 'dep:anyhow', 'dep:sha2']
 
 [dependencies]
 serde = "^1.0"
@@ -20,6 +21,9 @@ serde_derive = "^1.0"
 serde_json = "^1.0"
 thiserror = "1.0.50"
 quickcheck = {version = "1.0.3", optional = true}
+clap = { version = "4.4.7", optional = true, features = ["derive"] }
+anyhow = { version = "1.0.75", optional = true }
+sha2 = { version = "0.10.8", optional = true }
 
 [build-dependencies]
 rustc_version = "0.4.0"
@@ -27,3 +31,12 @@ rustc_version = "0.4.0"
 [dev-dependencies]
 quickcheck_macros = "1"
 sigmf = {features = ["quickcheck"], path="."}
+
+[lib]
+name = "sigmf"
+path = "src/lib.rs"
+
+[[bin]]
+name = "sigmf-hash"
+path = "src/sigmf_hash.rs"
+required-features = ["build-binary"]
