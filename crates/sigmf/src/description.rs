@@ -1,13 +1,13 @@
-use crate::{Annotation, Capture, Collection, DatasetFormat, Global, SigMFError};
+use crate::{Annotation, Capture, Collection, DatasetFormat, Extension, Global, SigMFError};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Description {
     #[serde(rename = "global", skip_serializing_if = "Option::is_none")]
     pub global: Option<Global>,
-    #[serde(rename = "annotations", skip_serializing_if = "Option::is_none")]
-    pub annotations: Option<Vec<Annotation>>,
     #[serde(rename = "captures", skip_serializing_if = "Option::is_none")]
     pub captures: Option<Vec<Capture>>,
+    #[serde(rename = "annotations", skip_serializing_if = "Option::is_none")]
+    pub annotations: Option<Vec<Annotation>>,
     #[serde(rename = "collections", skip_serializing_if = "Option::is_none")]
     pub collections: Option<Vec<Collection>>,
 }
@@ -41,7 +41,7 @@ impl Default for Description {
             global: Some(Global::default()),
             annotations: Some(Vec::new()),
             captures: Some(Vec::new()),
-            collections: Some(Vec::new()),
+            collections: None,
         }
     }
 }
@@ -54,19 +54,45 @@ impl Default for DescriptionBuilder {
     }
 }
 
-// impl  DescriptionBuilder {
-//     pub fn Datatype(datatype: &str) -> DescriptionBuilder {
+impl DescriptionBuilder {
+    pub fn sample_rate(&mut self, sample_rate: f64) -> &mut DescriptionBuilder {
+        let global = self.0.global.as_mut().unwrap();
+        global.sample_rate = Some(sample_rate);
+        self
+    }
 
-//     }
-// }
+    pub fn extensions(
+        &mut self,
+        name: &str,
+        version: &str,
+        optional: bool,
+    ) -> &mut DescriptionBuilder {
+        let global = self.0.global.as_mut().unwrap();
+        let new_ext = Extension {
+            name: name.to_string(),
+            version: version.to_string(),
+            optional: optional,
+        };
+        if let Some(extensions) = &mut global.extensions {
+            extensions.push(new_ext);
+        } else {
+            global.extensions = Some(vec![new_ext]);
+        }
+        self
+    }
+
+    pub fn build(&self) -> Result<Description, SigMFError> {
+        // TODO checks
+        Ok(self.0.clone())
+    }
+}
 
 impl From<DatasetFormat> for DescriptionBuilder {
     fn from(value: DatasetFormat) -> Self {
         let mut desc = DescriptionBuilder::default();
-        desc.0.global = Some(Global {
-            datatype: Some(value),
-            version: Some("1.0.0".to_string()),
-        });
+        let mut global = Global::default();
+        global.datatype = Some(value);
+        desc.0.global = Some(global);
         desc
     }
 }
