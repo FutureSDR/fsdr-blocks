@@ -20,6 +20,13 @@ impl Description {
         return Err(SigMFError::MissingMandatoryField("global"));
     }
 
+    pub fn global_mut(&mut self) -> Result<&mut Global, SigMFError> {
+        if let Some(global) = &mut self.global {
+            return Ok(global);
+        }
+        return Err(SigMFError::MissingMandatoryField("global"));
+    }
+
     pub fn annotations(&self) -> Result<&Vec<Annotation>, SigMFError> {
         if let Some(annotations) = &self.annotations {
             return Ok(&annotations);

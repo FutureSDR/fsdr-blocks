@@ -41,23 +41,24 @@ fn main() {
 }
 
 fn check(files: Vec<PathBuf>) {
-    for a_file in files {
-        if let Err(err) = check_sigmf(a_file) {
+    for mut a_file in files {
+        if let Err(err) = check_sigmf(&mut a_file) {
             eprintln!("{:#}", err);
         }
     }
 }
 
-fn check_sigmf(mut basename: PathBuf) -> Result<()> {
+fn get_desc(basename: &mut PathBuf) -> Result<Description> {
     basename.set_extension("sigmf-meta");
     let path = basename.as_path();
     let meta_file =
         File::open(path).with_context(|| format!("Error opening {}", path.display()))?;
     let rdr = BufReader::new(meta_file);
     let desc: Result<Description, serde_json::Error> = serde_json::from_reader(rdr);
-    let desc = desc?;
-    let expected_sha512 = desc.global()?.sha512.as_ref().expect("sha512 not present");
+    Ok(desc?)
+}
 
+fn compute_sha512(basename: &mut PathBuf) -> Result<impl AsRef<[u8]>> {
     basename.set_extension("sigmf-data");
     let path = basename.as_path();
     let mut data_file =
@@ -72,18 +73,41 @@ fn check_sigmf(mut basename: PathBuf) -> Result<()> {
         }
         hasher.update(&buffer[..count]);
     }
-    let result = hasher.finalize();
-    let result = hex::encode(result);
-    if expected_sha512.eq(&result) {
+    Ok(hasher.finalize())
+}
+
+fn check_sigmf(basename: &mut PathBuf) -> Result<()> {
+    let desc = get_desc(basename)?;
+    let expected_sha512 = desc.global()?.sha512.as_ref().expect("sha512 not present");
+    let computed_sha512 = compute_sha512(basename)?;
+    let computed_sha512 = hex::encode(computed_sha512);
+    if expected_sha512.eq(&computed_sha512) {
         println!("Hash match");
     } else {
         println!("{}", expected_sha512);
-        println!("{}", result);
+        println!("{}", computed_sha512);
         println!("Hash doesn't match");
     }
     Ok(())
 }
 
 fn update(files: Vec<PathBuf>) {
-    todo!("update")
+    for mut a_file in files {
+        if let Err(err) = update_sigmf(&mut a_file) {
+            eprintln!("{:#}", err);
+        }
+    }
+}
+
+fn update_sigmf(basename: &mut PathBuf) -> Result<()> {
+    let mut desc = get_desc(basename)?;
+    let computed_sha512 = compute_sha512(basename)?;
+    let computed_sha512 = hex::encode(computed_sha512);
+    desc.global_mut()?.sha512 = Some(computed_sha512);
+
+    basename.set_extension("sigmf-meta");
+    let mut data_file =
+        File::create(&basename).with_context(|| format!("Error opening {}", &basename.display()))?;
+    serde_json::to_writer(data_file, &desc)?;
+    Ok(())
 }
