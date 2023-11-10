@@ -73,7 +73,14 @@ fn check_sigmf(mut basename: PathBuf) -> Result<()> {
         hasher.update(&buffer[..count]);
     }
     let result = hasher.finalize();
-    println!("computed sha512: {:?}", result);
+    let result = hex::encode(result);
+    if expected_sha512.eq(&result) {
+        println!("Hash match");
+    } else {
+        println!("{}", expected_sha512);
+        println!("{}", result);
+        println!("Hash doesn't match");
+    }
     Ok(())
 }
 
