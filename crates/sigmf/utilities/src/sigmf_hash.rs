@@ -3,7 +3,7 @@ use clap::{arg, Parser, Subcommand};
 use sha2::{Digest, Sha512};
 use sigmf::Description;
 use std::fs::File;
-use std::io::{BufReader, Read};
+use std::io::Read;
 use std::path::PathBuf;
 
 #[derive(Parser)]
@@ -51,11 +51,7 @@ fn check(files: Vec<PathBuf>) {
 fn get_desc(basename: &mut PathBuf) -> Result<Description> {
     basename.set_extension("sigmf-meta");
     let path = basename.as_path();
-    let meta_file =
-        File::open(path).with_context(|| format!("Error opening {}", path.display()))?;
-    let rdr = BufReader::new(meta_file);
-    let desc: Result<Description, serde_json::Error> = serde_json::from_reader(rdr);
-    Ok(desc?)
+    Description::open(path).with_context(|| format!("Error opening {}", path.display()))
 }
 
 fn compute_sha512(basename: &mut PathBuf) -> Result<impl AsRef<[u8]>> {
@@ -106,8 +102,7 @@ fn update_sigmf(basename: &mut PathBuf) -> Result<()> {
     desc.global_mut()?.sha512 = Some(computed_sha512);
 
     basename.set_extension("sigmf-meta");
-    let data_file = File::create(&basename)
-        .with_context(|| format!("Error opening {}", &basename.display()))?;
-    serde_json::to_writer(data_file, &desc)?;
+    desc.create(&basename)
+        .with_context(|| format!("Error creating {}", &basename.display()))?;
     Ok(())
 }

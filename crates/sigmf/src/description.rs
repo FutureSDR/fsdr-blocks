@@ -1,3 +1,9 @@
+use std::{
+    fs::File,
+    io::{self, BufReader},
+    path::Path,
+};
+
 use crate::{Annotation, Capture, Collection, DatasetFormat, Extension, Global, SigMFError};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -39,6 +45,31 @@ impl Description {
             return Ok(captures);
         }
         Err(SigMFError::MissingMandatoryField("captures"))
+    }
+
+    pub fn to_writer<W>(&self, writer: W) -> Result<(), SigMFError>
+    where
+        W: io::Write,
+    {
+        Ok(serde_json::to_writer(writer, self)?)
+    }
+
+    pub fn create<P>(&self, path: P) -> Result<(), SigMFError>
+    where
+        P: AsRef<Path>,
+    {
+        let f = File::create(path)?;
+        self.to_writer(f)
+    }
+
+    pub fn open<P>(path: P) -> Result<Description, SigMFError>
+    where
+        P: AsRef<Path>,
+    {
+        let meta_file = File::open(path)?;
+        let rdr = BufReader::new(meta_file);
+        let desc: Result<Description, serde_json::Error> = serde_json::from_reader(rdr);
+        Ok(desc?)
     }
 }
 
@@ -86,6 +117,14 @@ impl DescriptionBuilder {
     pub fn build(&self) -> Result<Description, SigMFError> {
         // TODO checks
         Ok(self.0.clone())
+    }
+
+    pub fn open<P>(path: P) -> Result<DescriptionBuilder, SigMFError>
+    where
+        P: AsRef<Path>,
+    {
+        let desc = Description::open(path)?;
+        Ok(DescriptionBuilder(desc))
     }
 }
 

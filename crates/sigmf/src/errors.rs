@@ -1,3 +1,5 @@
+use std::io;
+
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -8,4 +10,6 @@ pub enum SigMFError {
     JsonError(#[from] serde_json::Error),
     #[error("Unknown DatasetFormat")]
     UnknownDatasetFormat(String),
+    #[error("io error")]
+    IoError(#[from] io::Error),
 }
