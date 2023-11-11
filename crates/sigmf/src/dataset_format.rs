@@ -133,28 +133,48 @@ impl DatasetFormat {
 
     pub fn is_little_endian(&self) -> bool {
         use DatasetFormat::*;
-        match self {
-            Rf64Le | Cf64Le | Rf32Le | Cf32Le | Ri32Le | Ci32Le | Ri16Le | Ci16Le | Ru32Le
-            | Cu32Le | Ru16Le | Cu16Le => true,
-            _ => false,
-        }
+        matches!(
+            self,
+            Rf64Le
+                | Cf64Le
+                | Rf32Le
+                | Cf32Le
+                | Ri32Le
+                | Ci32Le
+                | Ri16Le
+                | Ci16Le
+                | Ru32Le
+                | Cu32Le
+                | Ru16Le
+                | Cu16Le
+        )
     }
 
     pub fn is_big_endian(&self) -> bool {
         use DatasetFormat::*;
-        match self {
-            Rf64Be | Cf64Be | Rf32Be | Cf32Be | Ri32Be | Ci32Be | Ri16Be | Ci16Be | Ru32Be
-            | Cu32Be | Ru16Be | Cu16Be => true,
-            _ => false,
-        }
+        matches!(
+            self,
+            Rf64Be
+                | Cf64Be
+                | Rf32Be
+                | Cf32Be
+                | Ri32Be
+                | Ci32Be
+                | Ri16Be
+                | Ci16Be
+                | Ru32Be
+                | Cu32Be
+                | Ru16Be
+                | Cu16Be
+        )
     }
 
     pub fn is_float(&self) -> bool {
         use DatasetFormat::*;
-        match self {
-            Rf64Le | Rf64Be | Cf64Le | Cf64Be | Rf32Le | Rf32Be | Cf32Le | Cf32Be => true,
-            _ => false,
-        }
+        matches!(
+            self,
+            Rf64Le | Rf64Be | Cf64Le | Cf64Be | Rf32Le | Rf32Be | Cf32Le | Cf32Be
+        )
     }
 
     pub fn is_integer(&self) -> bool {
@@ -163,20 +183,16 @@ impl DatasetFormat {
 
     pub fn is_byte(&self) -> bool {
         use DatasetFormat::*;
-        match self {
-            RI8 | CU8 | CI8 | RU8 => true,
-            _ => false,
-        }
+        matches!(self, RI8 | CU8 | CI8 | RU8)
     }
 
     pub fn all() -> [&'static DatasetFormat; 28] {
         use DatasetFormat::*;
-        let alls = [
+        [
             &Rf64Le, &Rf64Be, &Cf64Le, &Cf64Be, &Rf32Le, &Rf32Be, &Cf32Le, &Cf32Be, &Ri32Le,
             &Ri32Be, &Ci32Le, &Ci32Be, &Ri16Le, &Ri16Be, &Ci16Le, &Ci16Be, &Ru32Le, &Ru32Be,
             &Cu32Le, &Cu32Be, &Ru16Le, &Ru16Be, &Cu16Le, &Cu16Be, &CI8, &CU8, &RI8, &RU8,
-        ];
-        alls
+        ]
     }
 }
 
@@ -307,19 +323,19 @@ where
     T: Sized,
 {
     pub fn complex() -> DatasetFormatBuilder<T> {
-        return DatasetFormatBuilder {
-            underlying_type: PhantomData::<T>::default(),
+        DatasetFormatBuilder {
+            underlying_type: PhantomData::<T>,
             complex: true,
             little_endian: true,
-        };
+        }
     }
 
     pub fn real() -> DatasetFormatBuilder<T> {
-        return DatasetFormatBuilder {
-            underlying_type: PhantomData::<T>::default(),
+        DatasetFormatBuilder {
+            underlying_type: PhantomData::<T>,
             complex: false,
             little_endian: true,
-        };
+        }
     }
 
     pub fn little_endian(mut self) -> DatasetFormatBuilder<T> {

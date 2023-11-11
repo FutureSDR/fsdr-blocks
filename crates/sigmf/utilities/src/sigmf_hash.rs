@@ -3,7 +3,7 @@ use clap::{arg, Parser, Subcommand};
 use sha2::{Digest, Sha512};
 use sigmf::Description;
 use std::fs::File;
-use std::io::{BufReader,Read};
+use std::io::{BufReader, Read};
 use std::path::PathBuf;
 
 #[derive(Parser)]
@@ -106,8 +106,8 @@ fn update_sigmf(basename: &mut PathBuf) -> Result<()> {
     desc.global_mut()?.sha512 = Some(computed_sha512);
 
     basename.set_extension("sigmf-meta");
-    let mut data_file =
-        File::create(&basename).with_context(|| format!("Error opening {}", &basename.display()))?;
+    let data_file = File::create(&basename)
+        .with_context(|| format!("Error opening {}", &basename.display()))?;
     serde_json::to_writer(data_file, &desc)?;
     Ok(())
 }

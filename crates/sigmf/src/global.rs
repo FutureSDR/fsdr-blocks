@@ -53,16 +53,16 @@ pub struct Global {
 impl Global {
     pub fn version(&self) -> Result<&String, SigMFError> {
         if let Some(version) = &self.version {
-            return Ok(&version);
+            return Ok(version);
         }
-        return Err(SigMFError::MissingMandatoryField("version"));
+        Err(SigMFError::MissingMandatoryField("version"))
     }
 
     pub fn datatype(&self) -> Result<&DatasetFormat, SigMFError> {
         if let Some(datatype) = &self.datatype {
-            return Ok(&datatype);
+            return Ok(datatype);
         }
-        return Err(SigMFError::MissingMandatoryField("datatype"));
+        Err(SigMFError::MissingMandatoryField("datatype"))
     }
 }
 
