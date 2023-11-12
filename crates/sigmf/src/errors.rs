@@ -12,4 +12,6 @@ pub enum SigMFError {
     UnknownDatasetFormat(String),
     #[error("io error")]
     IoError(#[from] io::Error),
+    #[error("Sample rate must be positive and less than 1e250")]
+    BadSampleRate(),
 }

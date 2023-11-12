@@ -2,6 +2,9 @@ use crate::{errors::SigMFError, AntennaExtension, DatasetFormat, Extension};
 use serde_json::Value;
 use std::collections::HashMap;
 
+#[cfg(feature = "quickcheck")]
+use quickcheck::{empty_shrinker, single_shrinker, Arbitrary, Gen};
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Global {
     #[serde(rename = "core:datatype")]
@@ -47,7 +50,7 @@ pub struct Global {
     pub antenna: AntennaExtension,
 
     #[serde(flatten)]
-    extra: HashMap<String, Value>,
+    pub extra: HashMap<String, Value>,
 }
 
 impl Global {
@@ -90,5 +93,29 @@ impl Default for Global {
             antenna: AntennaExtension::default(),
             extra: HashMap::new(),
         }
+    }
+}
+
+#[cfg(feature = "quickcheck")]
+impl Arbitrary for Global {
+    fn arbitrary(g: &mut Gen) -> Global {
+        let dataset = DatasetFormat::arbitrary(g);
+        let mut global = Global::default();
+        if bool::arbitrary(g) {
+            let sample_rate = f64::arbitrary(g);
+            let sample_rate = ((sample_rate % 1e15) * 100.0).trunc() / 100.0;
+            if !sample_rate.is_nan() {
+                global.sample_rate = Some(sample_rate.abs())
+            }
+        }
+        if bool::arbitrary(g) {}
+        global
+    }
+
+    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
+        if *self == Global::default() {
+            return empty_shrinker();
+        }
+        empty_shrinker()
     }
 }

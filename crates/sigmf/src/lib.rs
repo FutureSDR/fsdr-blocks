@@ -30,3 +30,6 @@ pub use extension::Extension;
 
 mod global;
 pub use global::Global;
+
+mod recording;
+pub use recording::{Recording, RecordingBuilder};

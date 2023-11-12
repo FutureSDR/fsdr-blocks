@@ -1,9 +1,6 @@
 use anyhow::{Context, Result};
 use clap::{arg, Parser, Subcommand};
-use sha2::{Digest, Sha512};
-use sigmf::Description;
-use std::fs::File;
-use std::io::Read;
+use sigmf::RecordingBuilder;
 use std::path::PathBuf;
 
 #[derive(Parser)]
@@ -41,42 +38,21 @@ fn main() {
 }
 
 fn check(files: Vec<PathBuf>) {
-    for mut a_file in files {
-        if let Err(err) = check_sigmf(&mut a_file) {
+    for a_file in files {
+        if let Err(err) = check_sigmf(a_file) {
             eprintln!("{:#}", err);
         }
     }
 }
 
-fn get_desc(basename: &mut PathBuf) -> Result<Description> {
-    basename.set_extension("sigmf-meta");
-    let path = basename.as_path();
-    Description::open(path).with_context(|| format!("Error opening {}", path.display()))
-}
-
-fn compute_sha512(basename: &mut PathBuf) -> Result<impl AsRef<[u8]>> {
-    basename.set_extension("sigmf-data");
-    let path = basename.as_path();
-    let mut data_file =
-        File::open(path).with_context(|| format!("Error opening {}", path.display()))?;
-    let mut hasher = Sha512::new();
-    let mut buffer = [0; 1024];
-
-    loop {
-        let count = data_file.read(&mut buffer)?;
-        if count == 0 {
-            break;
-        }
-        hasher.update(&buffer[..count]);
-    }
-    Ok(hasher.finalize())
-}
-
-fn check_sigmf(basename: &mut PathBuf) -> Result<()> {
-    let desc = get_desc(basename)?;
+fn check_sigmf(basename: PathBuf) -> Result<()> {
+    let mut record = RecordingBuilder::from(&basename)
+        .compute_sha512()
+        .with_context(|| format!("Computing sha512 of {}", basename.display()))?
+        .build();
+    let computed_sha512 = record.hash()?.clone();
+    let desc = record.load_description()?;
     let expected_sha512 = desc.global()?.sha512.as_ref().expect("sha512 not present");
-    let computed_sha512 = compute_sha512(basename)?;
-    let computed_sha512 = hex::encode(computed_sha512);
     if expected_sha512.eq(&computed_sha512) {
         println!("Hash match");
     } else {
@@ -88,21 +64,31 @@ fn check_sigmf(basename: &mut PathBuf) -> Result<()> {
 }
 
 fn update(files: Vec<PathBuf>) {
-    for mut a_file in files {
-        if let Err(err) = update_sigmf(&mut a_file) {
+    for a_file in files {
+        if let Err(err) = update_sigmf(a_file) {
             eprintln!("{:#}", err);
         }
     }
 }
 
-fn update_sigmf(basename: &mut PathBuf) -> Result<()> {
-    let mut desc = get_desc(basename)?;
-    let computed_sha512 = compute_sha512(basename)?;
-    let computed_sha512 = hex::encode(computed_sha512);
-    desc.global_mut()?.sha512 = Some(computed_sha512);
-
-    basename.set_extension("sigmf-meta");
-    desc.create(&basename)
-        .with_context(|| format!("Error creating {}", &basename.display()))?;
+fn update_sigmf(basename: PathBuf) -> Result<()> {
+    let mut record = RecordingBuilder::from(&basename)
+        .compute_sha512()
+        .with_context(|| format!("While computing sha512 of {}", basename.display()))?
+        .build();
+    let computed_sha512 = record.hash()?.clone();
+    let mut desc = record.load_description()?;
+    let expected_sha512 = desc.global()?.sha512.as_ref();
+    let mut need_update = true;
+    if let Some(expected_sha512) = expected_sha512 {
+        need_update = !expected_sha512.eq(&computed_sha512);
+    }
+    if need_update {
+        let mut basename = basename.to_path_buf();
+        basename.set_extension("sigmf-meta");
+        desc.global_mut()?.sha512 = Some(computed_sha512.to_string());
+        desc.create(&basename)
+            .with_context(|| format!("Error writing to {}", &basename.display()))?;
+    }
     Ok(())
 }

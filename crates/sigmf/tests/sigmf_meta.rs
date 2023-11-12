@@ -84,7 +84,7 @@ fn create_simple_description() -> Result<(), SigMFError> {
         .little_endian()
         .build();
     let desc = DescriptionBuilder::from(datatype)
-        .sample_rate(sample_rate)
+        .sample_rate(sample_rate)?
         .build()?;
     let expected = r#"
     {
@@ -117,8 +117,8 @@ fn create_description_with_extensions() -> Result<(), SigMFError> {
         .little_endian()
         .build();
     let desc = DescriptionBuilder::from(datatype)
-        .sample_rate(sample_rate)
-        .extensions("extension-01", "0.0.5", true)
+        .sample_rate(sample_rate)?
+        .extension("extension-01", "0.0.5", true)
         .build()?;
     let expected = r#"
     {
