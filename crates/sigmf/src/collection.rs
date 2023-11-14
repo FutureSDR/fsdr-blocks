@@ -24,3 +24,18 @@ pub struct Collection {
     #[serde(flatten)]
     pub extra: HashMap<String, Value>,
 }
+
+impl Default for Collection {
+    fn default() -> Self {
+        Self {
+            version: Some("1.0.0".to_string()),
+            streams: Some(Vec::new()),
+            extra: HashMap::new(),
+            description: None,
+            author: None,
+            collection_doi: None,
+            license: None,
+            extensions: None,
+        }
+    }
+}

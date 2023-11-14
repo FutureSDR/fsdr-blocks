@@ -19,6 +19,7 @@ thiserror = "1.0.50"
 clap = { version = "4.4.7", features = ["derive"] }
 anyhow = { version = "1.0.75"}
 sigmf = {path="../"}
+walkdir = "2.4.0"
 
 
 [build-dependencies]
@@ -29,3 +30,7 @@ rustc_version = "0.4.0"
 [[bin]]
 name = "sigmf-hash"
 path = "src/sigmf_hash.rs"
+
+[[bin]]
+name = "sigmf-col"
+path = "src/sigmf_col.rs"
