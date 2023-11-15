@@ -72,12 +72,27 @@ impl Description {
         Ok(serde_json::to_writer(writer, self)?)
     }
 
+    pub fn to_writer_pretty<W>(&self, writer: W) -> Result<(), SigMFError>
+    where
+        W: io::Write,
+    {
+        Ok(serde_json::to_writer_pretty(writer, self)?)
+    }
+
     pub fn create<P>(&self, path: P) -> Result<(), SigMFError>
     where
         P: AsRef<Path>,
     {
         let f = File::create(path)?;
         self.to_writer(f)
+    }
+
+    pub fn create_pretty<P>(&self, path: P) -> Result<(), SigMFError>
+    where
+        P: AsRef<Path>,
+    {
+        let f = File::create(path)?;
+        self.to_writer_pretty(f)
     }
 
     pub fn from_reader<R>(reader: R) -> Result<Description, SigMFError>

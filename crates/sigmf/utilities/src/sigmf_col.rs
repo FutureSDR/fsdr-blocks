@@ -87,7 +87,7 @@ impl Commands {
         // output.set_extension("sigmf-meta");
         collec
             .build()?
-            .create(output)
+            .create_pretty(output)
             .with_context(|| format!("Error writing to {}", &output.display()))?;
         Ok(())
     }
