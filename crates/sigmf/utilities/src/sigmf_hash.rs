@@ -84,9 +84,9 @@ fn update_sigmf(basename: PathBuf) -> Result<()> {
         need_update = !expected_sha512.eq(&computed_sha512);
     }
     if need_update {
-        let mut basename = basename.to_path_buf();
+        let mut basename = basename;
         basename.set_extension("sigmf-meta");
-        desc.global_mut()?.sha512 = Some(computed_sha512.to_string());
+        desc.global_mut()?.sha512 = Some(computed_sha512);
         desc.create_pretty(&basename)
             .with_context(|| format!("Error writing to {}", &basename.display()))?;
     }

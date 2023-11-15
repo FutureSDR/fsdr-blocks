@@ -1,4 +1,4 @@
-use anyhow::{Context, Error, Result};
+use anyhow::{Context, Result};
 use clap::{arg, Parser, Subcommand};
 use sigmf::{DescriptionBuilder, RecordingBuilder};
 use std::path::PathBuf;
@@ -47,7 +47,7 @@ impl Commands {
         use Commands::*;
         match self {
             Create { files, .. } => Ok(files),
-            _ => unreachable!()
+            _ => unreachable!(),
         }
     }
 
@@ -62,7 +62,7 @@ impl Commands {
                     unimplemented!()
                 }
             }
-            _ => unreachable!()
+            _ => unreachable!(),
         }
     }
 

@@ -99,8 +99,11 @@ impl Default for Global {
 #[cfg(feature = "quickcheck")]
 impl Arbitrary for Global {
     fn arbitrary(g: &mut Gen) -> Global {
-        let dataset = DatasetFormat::arbitrary(g);
-        let mut global = Global::default();
+        let dataset: DatasetFormat = DatasetFormat::arbitrary(g);
+        let mut global: Global = Global {
+            datatype: Some(dataset),
+            ..Global::default()
+        };
         if bool::arbitrary(g) {
             let sample_rate = f64::arbitrary(g);
             let sample_rate = ((sample_rate % 1e15) * 100.0).trunc() / 100.0;

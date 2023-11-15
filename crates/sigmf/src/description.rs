@@ -1,9 +1,9 @@
+use crate::Recording;
 use std::{
     fs::File,
     io::{self, BufReader},
     path::Path,
 };
-use crate::Recording;
 
 #[cfg(feature = "quickcheck")]
 use quickcheck::{empty_shrinker, single_shrinker, Arbitrary, Gen};
@@ -159,7 +159,7 @@ impl DescriptionBuilder {
     }
 
     pub fn sample_rate(&mut self, sample_rate: f64) -> Result<&mut DescriptionBuilder, SigMFError> {
-        if sample_rate.is_nan() || sample_rate < 0.0 || sample_rate > 1e251 {
+        if sample_rate.is_nan() || !(0.0..=1e251).contains(&sample_rate) {
             return Err(SigMFError::BadSampleRate());
         }
         let global = self.0.global.as_mut().unwrap();
@@ -206,7 +206,14 @@ impl DescriptionBuilder {
     }
 
     pub fn add_stream(&mut self, stream: Recording) -> Result<&mut Self, SigMFError> {
-        self.0.collection.as_mut().expect("").streams.as_mut().expect("msg").push(stream);
+        self.0
+            .collection
+            .as_mut()
+            .expect("")
+            .streams
+            .as_mut()
+            .expect("msg")
+            .push(stream);
         Ok(self)
     }
 }
