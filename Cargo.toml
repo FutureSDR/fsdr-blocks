@@ -25,6 +25,8 @@ futuresdr = { git = "https://github.com/FutureSDR/FutureSDR", branch = "main" }
 async-trait = "0.1.68"
 crossbeam-channel = { version = "0.5.8", optional = true }
 bimap = { version = "0.6.3", optional = true }
+sigmf = { version = "0.1.0", path = "crates/sigmf" }
+async-fs = "2.1.0"
 
 [dev-dependencies]
 criterion = { version = "0.4.0", features = ["html_reports"] }
