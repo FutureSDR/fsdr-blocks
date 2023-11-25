@@ -12,7 +12,7 @@ use futuresdr::runtime::Runtime;
 use sigmf::DatasetFormat;
 use sigmf::DescriptionBuilder;
 
-fn test_no_conversion<T>(data: &[u8], datatype: DatasetFormat) -> Result<Vec<T>>
+pub fn test_no_conversion<T>(data: &[u8], datatype: DatasetFormat) -> Result<Vec<T>>
 where
     T: Sized
         + std::marker::Send

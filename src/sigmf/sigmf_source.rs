@@ -73,7 +73,7 @@ where
             vec![]
         };
         Block::new(
-            BlockMetaBuilder::new("FileSource").build(),
+            BlockMetaBuilder::new("SigMFFileSource").build(),
             StreamIoBuilder::new().add_output::<T>("out").build(),
             MessageIoBuilder::new().build(),
             SigMFSource::<T, R> {
