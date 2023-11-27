@@ -16,7 +16,8 @@ readme = "README.md"
 members = [
     ".",
     "crates/sigmf",
-    "crates/sigmf/utilities"
+    "crates/sigmf/utilities",
+    "examples/sigmf-samples"
 ]
 
 [dependencies]

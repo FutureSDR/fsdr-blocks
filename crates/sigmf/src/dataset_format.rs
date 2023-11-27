@@ -1,4 +1,4 @@
-use std::{fmt, marker::PhantomData};
+use std::{fmt, marker::PhantomData, ops::Index};
 
 #[cfg(feature = "quickcheck")]
 use quickcheck::{empty_shrinker, single_shrinker, Arbitrary, Gen};
@@ -186,7 +186,7 @@ impl DatasetFormat {
         matches!(self, RI8 | CU8 | CI8 | RU8)
     }
 
-    pub fn all() -> [&'static DatasetFormat; 28] {
+    pub const fn all() -> [&'static DatasetFormat; 28] {
         use DatasetFormat::*;
         [
             &Rf64Le, &Rf64Be, &Cf64Le, &Cf64Be, &Rf32Le, &Rf32Be, &Cf32Le, &Cf32Be, &Ri32Le,

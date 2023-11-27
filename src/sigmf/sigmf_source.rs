@@ -5,7 +5,6 @@ use std::path::PathBuf;
 use futuresdr::anyhow::{anyhow, Result};
 use futuresdr::futures::AsyncRead;
 use futuresdr::futures::AsyncReadExt;
-use futuresdr::runtime::BlockMeta;
 use futuresdr::runtime::BlockMetaBuilder;
 use futuresdr::runtime::Kernel;
 use futuresdr::runtime::MessageIo;
@@ -14,9 +13,14 @@ use futuresdr::runtime::StreamIo;
 use futuresdr::runtime::StreamIoBuilder;
 use futuresdr::runtime::WorkIo;
 use futuresdr::runtime::{Block, Pmt, Tag};
+use futuresdr::runtime::{BlockMeta, Flowgraph};
 
-use sigmf::RecordingBuilder;
 use sigmf::{Annotation, Capture, Description};
+use sigmf::{DatasetFormat, DatasetFormatBuilder, RecordingBuilder};
+
+use crate::type_converters::{ScaledConverterBuilder, TypeConvertersBuilder};
+
+use super::BytesConveter;
 
 /// Read samples from a SigMF file.
 ///
@@ -41,10 +45,11 @@ use sigmf::{Annotation, Capture, Description};
 /// let source = builder.build::<u16>();
 /// ```
 #[cfg_attr(docsrs, doc(cfg(not(target_arch = "wasm32"))))]
-pub struct SigMFSource<T, R>
+pub struct SigMFSource<T, R, F>
 where
     T: Send + 'static + Sized,
     R: AsyncRead,
+    F: FnMut(&[u8]) -> T + Send + 'static,
 {
     reader: R,
     annotations: Vec<Annotation>,
@@ -53,15 +58,20 @@ where
     sample_index: usize,
     _sample_type: std::marker::PhantomData<T>,
     _reader_type: std::marker::PhantomData<R>,
+    converter: F,
+    item_size: usize,
 }
 
-impl<'a, T, R> SigMFSource<T, R>
+impl<'a, T, R, F> SigMFSource<T, R, F>
 where
     T: Send + 'static + Sized + std::marker::Sync,
     R: AsyncRead + std::marker::Sync + std::marker::Send + std::marker::Unpin + 'static,
+    F: FnMut(&[u8]) -> T + Send + 'static,
 {
     /// Create FileSource block
-    pub fn new(reader: R, desc: Description) -> Block {
+    pub fn new(reader: R, desc: Description, converter: F) -> Result<Block> {
+        let global = desc.global()?;
+        let datatype = *global.datatype()?;
         let annotations = if let Some(annot) = desc.annotations {
             annot
         } else {
@@ -72,11 +82,11 @@ where
         } else {
             vec![]
         };
-        Block::new(
+        Ok(Block::new(
             BlockMetaBuilder::new("SigMFFileSource").build(),
             StreamIoBuilder::new().add_output::<T>("out").build(),
             MessageIoBuilder::new().build(),
-            SigMFSource::<T, R> {
+            SigMFSource::<T, R, F> {
                 reader,
                 annotations,
                 captures,
@@ -84,8 +94,10 @@ where
                 sample_index: 0,
                 _sample_type: std::marker::PhantomData,
                 _reader_type: std::marker::PhantomData,
+                converter,
+                item_size: datatype.size(),
             },
-        )
+        ))
     }
 }
 
@@ -106,10 +118,11 @@ pub fn convert_annotation_to_pmt(annot: &Annotation) -> Pmt {
 
 #[doc(hidden)]
 #[async_trait]
-impl<'a, T, R> Kernel for SigMFSource<T, R>
+impl<'a, T, R, F> Kernel for SigMFSource<T, R, F>
 where
     T: Send + 'static + Sized + std::marker::Sync,
     R: AsyncRead + std::marker::Send + std::marker::Sync + std::marker::Unpin,
+    F: FnMut(&[u8]) -> T + Send + 'static,
 {
     async fn work(
         &mut self,
@@ -118,30 +131,31 @@ where
         _mio: &mut MessageIo<Self>,
         _meta: &mut BlockMeta,
     ) -> Result<()> {
-        let out = sio.output(0).slice_unchecked::<u8>();
-        let item_size = std::mem::size_of::<T>();
+        let o = sio.output(0).slice::<T>();
 
-        debug_assert_eq!(out.len() % item_size, 0);
-
+        let mut out = [0u8; 2048];
         let mut i = 0;
-
-        while i < out.len() {
-            match self.reader.read(&mut out[i..]).await {
-                Ok(0) => {
-                    io.finished = true;
-                    break;
-                }
-                Ok(written) => {
-                    i += written;
-                }
-                Err(e) => panic!("SigMFSource: Error reading data: {e:?}"),
+        // let max_produce = o.len();
+        // while i < max_produce {
+        match self.reader.read(&mut out[i..]).await {
+            Ok(0) => {
+                io.finished = true;
+                // break;
             }
+            Ok(written) => {
+                for (v, r) in out.chunks_exact(self.item_size).zip(o) {
+                    *r = (self.converter)(v);
+                }
+                i += written;
+            }
+            Err(e) => panic!("SigMFSource: Error reading data: {e:?}"),
         }
-        let amount = i / item_size;
-        sio.output(0).produce(amount);
+        // }
+        // println!("written: {:?}", i);
+        sio.output(0).produce(i);
         while let Some(annot) = self.annotations.get(0) {
             if let Some(annot_sample_start) = annot.sample_start {
-                let upper_sample_index = self.sample_index + amount;
+                let upper_sample_index = self.sample_index + i;
                 if (self.sample_index..upper_sample_index).contains(&annot_sample_start) {
                     let tag = convert_annotation_to_pmt(annot);
                     let tag = Tag::Data(tag);
@@ -157,7 +171,7 @@ where
                 self.annotations.remove(0);
             }
         }
-        self.sample_index += amount;
+        self.sample_index += i;
 
         Ok(())
     }
@@ -171,12 +185,6 @@ where
     //     Ok(())
     // }
 }
-
-// impl Into<HashMap<String, Pmt>> for Annotation {
-//     fn into(self) -> HashMap<String, Pmt> {
-//         todo!()
-//     }
-// }
 
 pub struct SigMFSourceBuilder {
     basename: PathBuf,
@@ -223,27 +231,19 @@ impl From<&str> for SigMFSourceBuilder {
 }
 
 impl SigMFSourceBuilder {
-    pub async fn build<T: Sized + 'static + Send>(&self) -> Result<Block> {
+    pub async fn build<T: Sized + 'static + Send + Sync>(&mut self) -> Result<Block>
+    where
+        sigmf::DatasetFormat: BytesConveter<T>,
+    {
         let mut record = RecordingBuilder::from(&self.basename);
         let (_, desc) = record.load_description()?;
-        let global = desc.global()?;
-        let datatype = global.datatype()?;
-
-        // if datatype.is_real() {
-        //     return Err(anyhow!("Expected complex dataset format, got {}", datatype))
-        // }
-
+        let datatype = desc.global()?.datatype()?.to_owned();
+        self.basename.set_extension("sigmf-data");
         let actual_file = async_fs::File::open(&self.basename).await?;
-
-        // #[cfg(target_endian = "little")]
-        // {
-        //     use sigmf::DatasetFormat::*;
-        //     let filter = match datatype {
-        //         &Cf32Le => ,
-        //         _ => actual_file,
-        //     }
-        // }
-
-        Ok(SigMFSource::<u32, _>::new(actual_file, desc))
+        Ok(SigMFSource::<T, _, _>::new(
+            actual_file,
+            desc,
+            move |bytes| datatype.convert(bytes),
+        )?)
     }
 }

@@ -144,7 +144,7 @@ where
         _meta: &mut BlockMeta,
     ) -> Result<()> {
         let desc = self.description.build()?;
-        desc.to_writer(&mut self.meta_writer)?;
+        desc.to_writer_pretty(&mut self.meta_writer)?;
         Ok(())
     }
 }
@@ -152,6 +152,15 @@ where
 pub struct SigMFSinkBuilder {
     basename: PathBuf,
     datatype: DatasetFormat,
+}
+
+impl SigMFSinkBuilder {
+    pub fn datatype(self, data: DatasetFormat) -> Self {
+        SigMFSinkBuilder {
+            basename: self.basename,
+            datatype: data,
+        }
+    }
 }
 
 impl From<&PathBuf> for SigMFSinkBuilder {
@@ -202,6 +211,7 @@ impl From<&str> for SigMFSinkBuilder {
 impl SigMFSinkBuilder {
     pub async fn build<T: Sized + 'static + Sync + Send>(&mut self) -> Result<Block> {
         let desc = DescriptionBuilder::from(self.datatype);
+        self.basename.set_extension("sigmf-data");
         let actual_file = std::fs::File::create(&self.basename)?;
         self.basename.set_extension("sigmf-meta");
         let meta_file = std::fs::File::create(&self.basename)?;
