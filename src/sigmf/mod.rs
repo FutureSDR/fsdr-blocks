@@ -1,4 +1,5 @@
 mod sigmf_source;
+use futuresdr::num_complex::Complex;
 pub use sigmf_source::{SigMFSource, SigMFSourceBuilder};
 mod sigmf_sink;
 pub use sigmf::*;
@@ -21,8 +22,8 @@ impl BytesConveter<f32> for DatasetFormat {
             Rf64Be => f64::from_ne_bytes(bytes[0..8].try_into().unwrap()) as f32,
             // Cf64Le => write!(f, "cf64_le"),
             // Cf64Be => write!(f, "cf64_be"),
-            Rf32Le => f32::from_le_bytes(bytes[0..4].try_into().unwrap()) as f32,
-            Rf32Be => f32::from_be_bytes(bytes[0..4].try_into().unwrap()) as f32,
+            Rf32Le => f32::from_le_bytes(bytes[0..4].try_into().unwrap()),
+            Rf32Be => f32::from_be_bytes(bytes[0..4].try_into().unwrap()),
             // Cf32Le => write!(f, "cf32_le"),
             // Cf32Be => write!(f, "cf32_be"),
             Ri32Le => ScaledConverterBuilder::<i32, f32>::convert(&i32::from_le_bytes(
@@ -62,7 +63,7 @@ impl BytesConveter<f32> for DatasetFormat {
             RI8 => ScaledConverterBuilder::<i8, f32>::convert(&i8::from_ne_bytes(
                 bytes[0..1].try_into().unwrap(),
             )),
-            RU8 => ScaledConverterBuilder::<u8, f32>::convert(&(bytes[0] as u8)),
+            RU8 => ScaledConverterBuilder::<u8, f32>::convert(&(bytes[0])),
             _ => todo!("not yet implemented"),
         }
     }
@@ -72,7 +73,17 @@ impl BytesConveter<u8> for DatasetFormat {
     fn convert(self, bytes: &[u8]) -> u8 {
         use DatasetFormat::*;
         match self {
-            RU8 => bytes[0] as u8,
+            RU8 => bytes[0],
+            _ => todo!("not yet implemented"),
+        }
+    }
+}
+
+impl BytesConveter<i8> for DatasetFormat {
+    fn convert(self, bytes: &[u8]) -> i8 {
+        use DatasetFormat::*;
+        match self {
+            RI8 => bytes[0] as i8,
             _ => todo!("not yet implemented"),
         }
     }
@@ -93,8 +104,27 @@ impl BytesConveter<u32> for DatasetFormat {
     fn convert(self, bytes: &[u8]) -> u32 {
         use DatasetFormat::*;
         match self {
-            Ru32Le => u32::from_le_bytes(bytes[0..2].try_into().unwrap()),
-            Ru32Be => u32::from_be_bytes(bytes[0..2].try_into().unwrap()),
+            Ru32Le => u32::from_le_bytes(bytes[0..4].try_into().unwrap()),
+            Ru32Be => u32::from_be_bytes(bytes[0..4].try_into().unwrap()),
+            _ => todo!("not yet implemented"),
+        }
+    }
+}
+
+impl BytesConveter<Complex<u16>> for DatasetFormat {
+    fn convert(self, bytes: &[u8]) -> Complex<u16> {
+        use DatasetFormat::*;
+        match self {
+            Cu16Be => Complex::new(
+                u16::from_be_bytes(bytes[0..2].try_into().unwrap()),
+                u16::from_be_bytes(bytes[2..4].try_into().unwrap()),
+            ),
+            Cu16Le => Complex::new(
+                u16::from_le_bytes(bytes[0..2].try_into().unwrap()),
+                u16::from_le_bytes(bytes[2..4].try_into().unwrap()),
+            ),
+            Ru16Be => Complex::new(u16::from_be_bytes(bytes[0..2].try_into().unwrap()), 0u16),
+            Ru16Le => Complex::new(u16::from_le_bytes(bytes[0..2].try_into().unwrap()), 0u16),
             _ => todo!("not yet implemented"),
         }
     }

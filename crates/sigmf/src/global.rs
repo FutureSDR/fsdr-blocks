@@ -3,7 +3,7 @@ use serde_json::Value;
 use std::collections::HashMap;
 
 #[cfg(feature = "quickcheck")]
-use quickcheck::{empty_shrinker, single_shrinker, Arbitrary, Gen};
+use quickcheck::{empty_shrinker, Arbitrary, Gen};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Global {
@@ -111,7 +111,7 @@ impl Arbitrary for Global {
                 global.sample_rate = Some(sample_rate.abs())
             }
         }
-        if bool::arbitrary(g) {}
+        // if bool::arbitrary(g) {}
         global
     }
 

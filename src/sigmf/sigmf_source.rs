@@ -2,9 +2,10 @@ use std::collections::HashMap;
 use std::ffi::OsStr;
 use std::path::PathBuf;
 
-use futuresdr::anyhow::{anyhow, Result};
+use futuresdr::anyhow::Result;
 use futuresdr::futures::AsyncRead;
 use futuresdr::futures::AsyncReadExt;
+use futuresdr::runtime::BlockMeta;
 use futuresdr::runtime::BlockMetaBuilder;
 use futuresdr::runtime::Kernel;
 use futuresdr::runtime::MessageIo;
@@ -13,12 +14,9 @@ use futuresdr::runtime::StreamIo;
 use futuresdr::runtime::StreamIoBuilder;
 use futuresdr::runtime::WorkIo;
 use futuresdr::runtime::{Block, Pmt, Tag};
-use futuresdr::runtime::{BlockMeta, Flowgraph};
 
+use sigmf::RecordingBuilder;
 use sigmf::{Annotation, Capture, Description};
-use sigmf::{DatasetFormat, DatasetFormatBuilder, RecordingBuilder};
-
-use crate::type_converters::{ScaledConverterBuilder, TypeConvertersBuilder};
 
 use super::BytesConveter;
 
@@ -41,7 +39,7 @@ use super::BytesConveter;
 ///
 /// // Loads samples as unsigned 16-bits integer from the file `my_filename.sigmf-data` with
 /// // conversion applied depending on the data type actually described in `my_filename.sigmf-meta`
-/// let builder = SigMFSourceBuilder::from("my_filename");
+/// let mut builder = SigMFSourceBuilder::from("my_filename");
 /// let source = builder.build::<u16>();
 /// ```
 #[cfg_attr(docsrs, doc(cfg(not(target_arch = "wasm32"))))]
@@ -62,7 +60,7 @@ where
     item_size: usize,
 }
 
-impl<'a, T, R, F> SigMFSource<T, R, F>
+impl<T, R, F> SigMFSource<T, R, F>
 where
     T: Send + 'static + Sized + std::marker::Sync,
     R: AsyncRead + std::marker::Sync + std::marker::Send + std::marker::Unpin + 'static,
@@ -103,14 +101,24 @@ where
 
 pub fn convert_annotation_to_pmt(annot: &Annotation) -> Pmt {
     let mut dict = HashMap::<String, Pmt>::new();
+    dict.insert(
+        "type".to_string(),
+        Pmt::String("sigmf:annotation".to_string()),
+    );
     if let Some(label) = &annot.label {
-        dict.insert("label".to_string(), Pmt::String(label.clone()));
+        dict.insert("core:label".to_string(), Pmt::String(label.clone()));
     }
     if let Some(annot_sample_start) = annot.sample_start {
-        dict.insert("sample_start".to_string(), Pmt::Usize(annot_sample_start));
+        dict.insert(
+            "core:sample_start".to_string(),
+            Pmt::Usize(annot_sample_start),
+        );
     }
     if let Some(annot_sample_count) = annot.sample_count {
-        dict.insert("sample_count".to_string(), Pmt::Usize(annot_sample_count));
+        dict.insert(
+            "core:sample_count".to_string(),
+            Pmt::Usize(annot_sample_count),
+        );
     }
     // TODO
     Pmt::MapStrPmt(dict)
@@ -118,7 +126,7 @@ pub fn convert_annotation_to_pmt(annot: &Annotation) -> Pmt {
 
 #[doc(hidden)]
 #[async_trait]
-impl<'a, T, R, F> Kernel for SigMFSource<T, R, F>
+impl<T, R, F> Kernel for SigMFSource<T, R, F>
 where
     T: Send + 'static + Sized + std::marker::Sync,
     R: AsyncRead + std::marker::Send + std::marker::Sync + std::marker::Unpin,
@@ -146,14 +154,13 @@ where
                 for (v, r) in out.chunks_exact(self.item_size).zip(o) {
                     *r = (self.converter)(v);
                 }
-                i += written;
+                i += written / self.item_size;
             }
             Err(e) => panic!("SigMFSource: Error reading data: {e:?}"),
         }
         // }
-        // println!("written: {:?}", i);
-        sio.output(0).produce(i);
-        while let Some(annot) = self.annotations.get(0) {
+
+        while let Some(annot) = self.annotations.first() {
             if let Some(annot_sample_start) = annot.sample_start {
                 let upper_sample_index = self.sample_index + i;
                 if (self.sample_index..upper_sample_index).contains(&annot_sample_start) {
@@ -171,6 +178,9 @@ where
                 self.annotations.remove(0);
             }
         }
+
+        // println!("written: {:?}", i);
+        sio.output(0).produce(i);
         self.sample_index += i;
 
         Ok(())
@@ -188,6 +198,11 @@ where
 
 pub struct SigMFSourceBuilder {
     basename: PathBuf,
+}
+
+pub struct SigMFSourceBuilderFromReader<R: AsyncRead> {
+    data: R,
+    desc: Description,
 }
 
 impl From<&PathBuf> for SigMFSourceBuilder {
@@ -231,6 +246,13 @@ impl From<&str> for SigMFSourceBuilder {
 }
 
 impl SigMFSourceBuilder {
+    pub fn with_data_and_description<R: AsyncRead>(
+        reader: R,
+        desc: Description,
+    ) -> SigMFSourceBuilderFromReader<R> {
+        SigMFSourceBuilderFromReader { data: reader, desc }
+    }
+
     pub async fn build<T: Sized + 'static + Send + Sync>(&mut self) -> Result<Block>
     where
         sigmf::DatasetFormat: BytesConveter<T>,
@@ -240,10 +262,19 @@ impl SigMFSourceBuilder {
         let datatype = desc.global()?.datatype()?.to_owned();
         self.basename.set_extension("sigmf-data");
         let actual_file = async_fs::File::open(&self.basename).await?;
-        Ok(SigMFSource::<T, _, _>::new(
-            actual_file,
-            desc,
-            move |bytes| datatype.convert(bytes),
-        )?)
+        SigMFSource::<T, _, _>::new(actual_file, desc, move |bytes| datatype.convert(bytes))
+    }
+}
+
+impl<R> SigMFSourceBuilderFromReader<R>
+where
+    R: AsyncRead + std::marker::Send + std::marker::Sync + std::marker::Unpin + 'static,
+{
+    pub async fn build<T: Sized + 'static + Send + Sync>(self) -> Result<Block>
+    where
+        sigmf::DatasetFormat: BytesConveter<T>,
+    {
+        let datatype = *self.desc.global()?.datatype()?;
+        SigMFSource::<T, R, _>::new(self.data, self.desc, move |bytes| datatype.convert(bytes))
     }
 }

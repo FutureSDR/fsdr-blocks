@@ -1,0 +1,347 @@
+{
+    // Utilisez IntelliSense pour en savoir plus sur les attributs possibles.
+    // Pointez pour afficher la description des attributs existants.
+    // Pour plus d'informations, visitez : https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in library 'fsdr-blocks'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=fsdr-blocks"
+                ],
+                "filter": {
+                    "name": "fsdr-blocks",
+                    "kind": "lib"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'type_converters'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=type_converters",
+                    "--package=fsdr-blocks"
+                ],
+                "filter": {
+                    "name": "type_converters",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'tests'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=tests",
+                    "--package=fsdr-blocks"
+                ],
+                "filter": {
+                    "name": "tests",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug benchmark 'crossbeam_sink'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--bench=crossbeam_sink",
+                    "--package=fsdr-blocks"
+                ],
+                "filter": {
+                    "name": "crossbeam_sink",
+                    "kind": "bench"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug benchmark 'crossbeam_source'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--bench=crossbeam_source",
+                    "--package=fsdr-blocks"
+                ],
+                "filter": {
+                    "name": "crossbeam_source",
+                    "kind": "bench"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug benchmark 'cw_to_char'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--bench=cw_to_char",
+                    "--package=fsdr-blocks"
+                ],
+                "filter": {
+                    "name": "cw_to_char",
+                    "kind": "bench"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug benchmark 'bb_to_cw'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--bench=bb_to_cw",
+                    "--package=fsdr-blocks"
+                ],
+                "filter": {
+                    "name": "bb_to_cw",
+                    "kind": "bench"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug benchmark 'shared'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--bench=shared",
+                    "--package=fsdr-blocks"
+                ],
+                "filter": {
+                    "name": "shared",
+                    "kind": "bench"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in library 'sigmf'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=sigmf"
+                ],
+                "filter": {
+                    "name": "sigmf",
+                    "kind": "lib"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'description'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=description",
+                    "--package=sigmf"
+                ],
+                "filter": {
+                    "name": "description",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'dataset_format'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=dataset_format",
+                    "--package=sigmf"
+                ],
+                "filter": {
+                    "name": "dataset_format",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'sigmf_meta'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=sigmf_meta",
+                    "--package=sigmf"
+                ],
+                "filter": {
+                    "name": "sigmf_meta",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug executable 'sigmf-hash'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=sigmf-hash",
+                    "--package=sigmf-utilities"
+                ],
+                "filter": {
+                    "name": "sigmf-hash",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in executable 'sigmf-hash'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--bin=sigmf-hash",
+                    "--package=sigmf-utilities"
+                ],
+                "filter": {
+                    "name": "sigmf-hash",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug executable 'sigmf-col'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=sigmf-col",
+                    "--package=sigmf-utilities"
+                ],
+                "filter": {
+                    "name": "sigmf-col",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in executable 'sigmf-col'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--bin=sigmf-col",
+                    "--package=sigmf-utilities"
+                ],
+                "filter": {
+                    "name": "sigmf-col",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug executable 'sigmf-convert'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=sigmf-convert",
+                    "--package=sigmf-samples"
+                ],
+                "filter": {
+                    "name": "sigmf-convert",
+                    "kind": "bin"
+                }
+            },
+            "args": ["../../crates/sigmf/samples/test1.sigmf-meta", "rf32_le", "./test2"],
+            "cwd": "${workspaceFolder}/examples/sigmf-samples"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in executable 'sigmf-convert'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--bin=sigmf-convert",
+                    "--package=sigmf-samples"
+                ],
+                "filter": {
+                    "name": "sigmf-convert",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        }
+    ]
+}

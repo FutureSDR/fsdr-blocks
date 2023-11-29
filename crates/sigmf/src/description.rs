@@ -6,7 +6,7 @@ use std::{
 };
 
 #[cfg(feature = "quickcheck")]
-use quickcheck::{empty_shrinker, single_shrinker, Arbitrary, Gen};
+use quickcheck::{empty_shrinker, Arbitrary, Gen};
 
 use crate::{Annotation, Capture, Collection, DatasetFormat, Extension, Global, SigMFError};
 
@@ -214,6 +214,15 @@ impl DescriptionBuilder {
             .as_mut()
             .expect("msg")
             .push(stream);
+        Ok(self)
+    }
+
+    pub fn add_annotation(&mut self, annot: Annotation) -> Result<&mut Self, SigMFError> {
+        if let Some(annotations) = &mut self.0.annotations {
+            annotations.push(annot);
+        } else {
+            self.0.annotations = Some(vec![annot]);
+        }
         Ok(self)
     }
 }

@@ -5,5 +5,17 @@
         "core:sha512": "d739c3803852bd27203d3638ef3605404a1afbbf6ab7caa04458913f3e54c2086c091e98720a5634b1b5fc3fd79cd72413581aa2934489edec5e4c6c640269b0"
     },
     "captures": [],
-    "annotations": []
+    "annotations": [
+        {
+            "core:sample_start": 0,
+            "core:sample_count": 512,
+            "core:label": "first 512 random bytes",
+            "core:comment": "some comment"
+        },
+        {
+            "core:sample_start": 512,
+            "core:sample_count": 512,
+            "core:label": "second part of 512 random bytes"
+        }
+    ]
 }

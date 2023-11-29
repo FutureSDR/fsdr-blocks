@@ -8,7 +8,8 @@ edition = "2021"
 [dependencies]
 clap = { version = "4.4.7", features = ["derive"] }
 fsdr-blocks = {path="../../"}
-futuresdr = { git = "https://github.com/FutureSDR/FutureSDR", branch = "main" }
+# futuresdr = { git = "https://github.com/FutureSDR/FutureSDR", branch = "main" }
+futuresdr = {path="../../../FutureSDR"}
 
 [[bin]]
 name = "sigmf-convert"

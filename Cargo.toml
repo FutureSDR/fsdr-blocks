@@ -17,12 +17,12 @@ members = [
     ".",
     "crates/sigmf",
     "crates/sigmf/utilities",
-    "examples/sigmf-samples"
+    "examples/sigmf-samples",
 ]
 
 [dependencies]
-futuresdr = { git = "https://github.com/FutureSDR/FutureSDR", branch = "main" }
-#futuresdr = { version="0.0.32" }
+#futuresdr = { git = "https://github.com/FutureSDR/FutureSDR", branch = "main" }
+futuresdr = { path = "../FutureSDR" }
 async-trait = "0.1.68"
 crossbeam-channel = { version = "0.5.8", optional = true }
 bimap = { version = "0.6.3", optional = true }
@@ -32,6 +32,7 @@ async-fs = "2.1.0"
 [dev-dependencies]
 criterion = { version = "0.4.0", features = ["html_reports"] }
 rand = { version = "0.8.5" }
+quickcheck_macros = "1"
 
 [features]
 default = []

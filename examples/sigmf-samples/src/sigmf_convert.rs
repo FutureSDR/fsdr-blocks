@@ -5,10 +5,11 @@ use fsdr_blocks::{
     sigmf::{SigMFSinkBuilder, SigMFSourceBuilder},
     type_converters::TypeConvertersBuilder,
 };
+use futuresdr::blocks::TagDebug;
+use futuresdr::macros::connect;
 use futuresdr::{
-    anyhow::{anyhow, Context, Result},
+    anyhow::{anyhow, Result},
     blocks::Apply,
-    num_complex::{Complex, Complex32},
     runtime::{Flowgraph, Runtime},
 };
 use std::path::PathBuf;
@@ -66,10 +67,16 @@ impl Cli {
             // }
             _ => return Err(anyhow!("Unsupported target type: {}", self.target)),
         };
-        fg.connect_stream(src, "out", conv, "in")
-            .with_context(|| "src->conv")?;
-        fg.connect_stream(conv, "out", snk, "in")
-            .with_context(|| "conv->snk")?;
+        connect!(fg, src > conv > snk);
+        // fg.connect_stream(src, "out", conv, "in")
+        //     .with_context(|| "src->conv")?;
+        // fg.connect_stream(conv, "out", snk, "in")
+        //     .with_context(|| "conv->snk")?;
+
+        let tag_dbg = TagDebug::<f32>::new("debugger");
+        let tag_dbg = fg.add_block(tag_dbg);
+        // fg.connect_stream(src, "out", tag_dbg, "in")?;
+        connect!(fg, src > tag_dbg);
 
         Runtime::new().run(fg)?;
         Ok(())

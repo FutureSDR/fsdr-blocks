@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use std::ffi::OsStr;
 use std::io::Write;
 use std::path::PathBuf;
@@ -14,8 +13,8 @@ use futuresdr::runtime::StreamIoBuilder;
 use futuresdr::runtime::WorkIo;
 use futuresdr::runtime::{Block, Pmt, Tag};
 
-use sigmf::{Annotation, Capture, Description};
-use sigmf::{DatasetFormat, DatasetFormatBuilder, DescriptionBuilder, RecordingBuilder};
+use sigmf::Annotation;
+use sigmf::{DatasetFormat, DescriptionBuilder};
 
 /// Write samples from a SigMF file.
 ///
@@ -47,8 +46,8 @@ where
     pub writer: W,
     pub meta_writer: M,
     pub description: DescriptionBuilder,
-    global_index: usize,
-    sample_index: usize,
+    // global_index: usize,
+    // sample_index: usize,
     _sample_type: std::marker::PhantomData<T>,
     _writer_type: std::marker::PhantomData<W>,
     _meta_writer_type: std::marker::PhantomData<M>,
@@ -70,8 +69,8 @@ where
                 writer,
                 meta_writer,
                 description,
-                global_index: 0,
-                sample_index: 0,
+                // global_index: 0,
+                // sample_index: 0,
                 _sample_type: std::marker::PhantomData,
                 _writer_type: std::marker::PhantomData,
                 _meta_writer_type: std::marker::PhantomData,
@@ -80,19 +79,43 @@ where
     }
 }
 
-pub fn convert_annotation_to_pmt(annot: &Annotation) -> Pmt {
-    let mut dict = HashMap::<String, Pmt>::new();
-    if let Some(label) = &annot.label {
-        dict.insert("label".to_string(), Pmt::String(label.clone()));
+pub fn convert_pmt_to_annotation(value: &Pmt) -> Option<Annotation> {
+    match value {
+        Pmt::MapStrPmt(dict) => {
+            let mut annot = Annotation::default();
+            let mut is_some = false;
+            if let Some(Pmt::String(label)) = dict.get("label") {
+                annot.label = Some(label.to_owned());
+                is_some = true;
+            }
+            if let Some(Pmt::String(label)) = dict.get("core:label") {
+                annot.label = Some(label.to_owned());
+                is_some = true;
+            }
+            if let Some(Pmt::Usize(annot_sample_start)) = dict.get("sample_start") {
+                annot.sample_start = Some(*annot_sample_start);
+                is_some = true;
+            }
+            if let Some(Pmt::Usize(annot_sample_start)) = dict.get("core:sample_start") {
+                annot.sample_start = Some(*annot_sample_start);
+                is_some = true;
+            }
+            if let Some(Pmt::Usize(annot_sample_count)) = dict.get("sample_count") {
+                annot.sample_count = Some(*annot_sample_count);
+                is_some = true;
+            }
+            if let Some(Pmt::Usize(annot_sample_count)) = dict.get("core:sample_count") {
+                annot.sample_count = Some(*annot_sample_count);
+                is_some = true;
+            }
+            if is_some {
+                Some(annot)
+            } else {
+                None
+            }
+        }
+        _ => None,
     }
-    if let Some(annot_sample_start) = annot.sample_start {
-        dict.insert("sample_start".to_string(), Pmt::Usize(annot_sample_start));
-    }
-    if let Some(annot_sample_count) = annot.sample_count {
-        dict.insert("sample_count".to_string(), Pmt::Usize(annot_sample_count));
-    }
-    // TODO
-    Pmt::MapStrPmt(dict)
 }
 
 #[doc(hidden)]
@@ -118,6 +141,17 @@ where
         if items > 0 {
             let i = &i[..items * item_size];
             let _ = self.writer.write_all(i)?;
+        }
+        for item in sio.input(0).tags() {
+            // let index = item.index;
+            match &item.tag {
+                Tag::Data(pmt) => {
+                    if let Some(annot) = convert_pmt_to_annotation(pmt) {
+                        self.description.add_annotation(annot)?;
+                    }
+                }
+                _ => {}
+            }
         }
 
         if sio.input(0).finished() {

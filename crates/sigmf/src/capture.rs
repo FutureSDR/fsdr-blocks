@@ -2,7 +2,7 @@ use serde_json::Value;
 use std::collections::HashMap;
 
 #[cfg(feature = "quickcheck")]
-use quickcheck::{empty_shrinker, single_shrinker, Arbitrary, Gen};
+use quickcheck::{empty_shrinker, Arbitrary, Gen};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
 pub struct Capture {

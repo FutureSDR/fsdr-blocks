@@ -1,6 +1,6 @@
 use futuresdr::blocks::VectorSink;
 
-use fsdr_blocks::sigmf::{SigMFSink, SigMFSource};
+use fsdr_blocks::sigmf::{BytesConveter, SigMFSink, SigMFSourceBuilder};
 use futuresdr::{
     anyhow::Result,
     blocks::{VectorSinkBuilder, VectorSource},
@@ -21,6 +21,7 @@ where
         + std::marker::Sync
         + std::fmt::Debug
         + std::cmp::PartialEq,
+    DatasetFormat: BytesConveter<T>,
 {
     let mut fg = Flowgraph::new();
 
@@ -42,7 +43,9 @@ where
     let mut fg = Flowgraph::new();
     let data_file = snk1.writer.to_owned().into_inner();
     let data_file = futuresdr::futures::io::Cursor::new(data_file);
-    let src2 = SigMFSource::<T, _>::new(data_file, desc);
+    let src2 = futuresdr::futures::executor::block_on(
+        SigMFSourceBuilder::with_data_and_description(data_file, desc).build::<T>(),
+    )?;
     let snk2 = VectorSinkBuilder::<T>::new().build();
     connect!(fg,
         src2 > snk2;

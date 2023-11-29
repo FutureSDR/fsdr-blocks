@@ -35,7 +35,7 @@ enum Commands {
 }
 
 impl Commands {
-    fn author(self) -> Option<String> {
+    pub fn author(self) -> Option<String> {
         use Commands::*;
         match self {
             Create { author, .. } => author,
@@ -43,7 +43,7 @@ impl Commands {
         }
     }
 
-    fn files(&self) -> Result<&Vec<PathBuf>> {
+    pub fn files(&self) -> Result<&Vec<PathBuf>> {
         use Commands::*;
         match self {
             Create { files, .. } => Ok(files),

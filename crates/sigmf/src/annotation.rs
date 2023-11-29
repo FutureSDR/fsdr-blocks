@@ -1,7 +1,7 @@
 use serde_json::Value;
 use std::collections::HashMap;
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
 pub struct Annotation {
     #[serde(rename = "core:sample_start")]
     pub sample_start: Option<usize>,
