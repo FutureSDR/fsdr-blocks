@@ -18,9 +18,11 @@ serde_json = "^1.0"
 thiserror = "1.0.50"
 clap = { version = "4.4.7", features = ["derive"] }
 anyhow = { version = "1.0.75"}
-sigmf = {path="../"}
+sigmf = {path="../sigmf"}
 walkdir = "2.4.0"
-
+fsdr-blocks = {path="../../"}
+# futuresdr = { git = "https://github.com/FutureSDR/FutureSDR", branch = "main" }
+futuresdr = {path="../../../FutureSDR"}
 
 [build-dependencies]
 rustc_version = "0.4.0"
@@ -34,3 +36,7 @@ path = "src/sigmf_hash.rs"
 [[bin]]
 name = "sigmf-col"
 path = "src/sigmf_col.rs"
+
+[[bin]]
+name = "sigmf-convert"
+path = "src/sigmf_convert.rs"

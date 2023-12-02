@@ -17,3 +17,5 @@ pub mod sigmf;
 pub mod stdinout;
 pub mod stream;
 pub mod type_converters;
+
+pub mod serde_pmt;

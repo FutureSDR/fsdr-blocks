@@ -4,5 +4,6 @@ mod channel;
 mod cw;
 
 mod math;
+mod serde_pmt;
 mod sigmf;
 mod stream;

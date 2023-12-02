@@ -253,25 +253,6 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug unit tests in executable 'sigmf-hash'",
-            "cargo": {
-                "args": [
-                    "test",
-                    "--no-run",
-                    "--bin=sigmf-hash",
-                    "--package=sigmf-utilities"
-                ],
-                "filter": {
-                    "name": "sigmf-hash",
-                    "kind": "bin"
-                }
-            },
-            "args": [],
-            "cwd": "${workspaceFolder}"
-        },
-        {
-            "type": "lldb",
-            "request": "launch",
             "name": "Debug executable 'sigmf-col'",
             "cargo": {
                 "args": [
@@ -321,8 +302,8 @@
                     "kind": "bin"
                 }
             },
-            "args": ["../../crates/sigmf/samples/test1.sigmf-meta", "rf32_le", "./test2"],
-            "cwd": "${workspaceFolder}/examples/sigmf-samples"
+            "args": ["../crates/sigmf/samples/test1.sigmf-meta", "rf32_le", "./test2"],
+            "cwd": "${workspaceFolder}/crates/sigmf-utilities"
         },
         {
             "type": "lldb",
