@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use std::ffi::OsStr;
 use std::path::PathBuf;
 
@@ -13,10 +12,12 @@ use futuresdr::runtime::MessageIoBuilder;
 use futuresdr::runtime::StreamIo;
 use futuresdr::runtime::StreamIoBuilder;
 use futuresdr::runtime::WorkIo;
-use futuresdr::runtime::{Block, Pmt, Tag};
+use futuresdr::runtime::{Block, Tag};
 
 use sigmf::RecordingBuilder;
 use sigmf::{Annotation, Capture, Description};
+
+use crate::serde_pmt;
 
 use super::BytesConveter;
 
@@ -99,31 +100,6 @@ where
     }
 }
 
-pub fn convert_annotation_to_pmt(annot: &Annotation) -> Pmt {
-    let mut dict = HashMap::<String, Pmt>::new();
-    dict.insert(
-        "type".to_string(),
-        Pmt::String("sigmf:annotation".to_string()),
-    );
-    if let Some(label) = &annot.label {
-        dict.insert("core:label".to_string(), Pmt::String(label.clone()));
-    }
-    if let Some(annot_sample_start) = annot.sample_start {
-        dict.insert(
-            "core:sample_start".to_string(),
-            Pmt::Usize(annot_sample_start),
-        );
-    }
-    if let Some(annot_sample_count) = annot.sample_count {
-        dict.insert(
-            "core:sample_count".to_string(),
-            Pmt::Usize(annot_sample_count),
-        );
-    }
-    // TODO
-    Pmt::MapStrPmt(dict)
-}
-
 #[doc(hidden)]
 #[async_trait]
 impl<T, R, F> Kernel for SigMFSource<T, R, F>
@@ -164,7 +140,7 @@ where
             if let Some(annot_sample_start) = annot.sample_start {
                 let upper_sample_index = self.sample_index + i;
                 if (self.sample_index..upper_sample_index).contains(&annot_sample_start) {
-                    let tag = convert_annotation_to_pmt(annot);
+                    let tag = serde_pmt::to_pmt(annot)?;
                     let tag = Tag::Data(tag);
                     sio.output(0)
                         .add_tag(annot_sample_start - self.sample_index, tag);
