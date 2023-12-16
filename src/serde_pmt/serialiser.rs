@@ -6,17 +6,9 @@ use serde::{
 };
 use std::collections::HashMap;
 
-use super::error::{Error, Result};
+use super::{error::{Error, Result}, to_pmt};
 
 pub struct Serializer {}
-
-pub fn to_pmt<T>(value: &T) -> Result<Pmt>
-where
-    T: Serialize + ?Sized,
-{
-    let mut serializer = Serializer {};
-    value.serialize(&mut serializer)
-}
 
 impl<'a> serde::Serializer for &'a mut Serializer {
     type Ok = Pmt;

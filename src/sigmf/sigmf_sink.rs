@@ -16,6 +16,8 @@ use futuresdr::runtime::{Block, Pmt, Tag};
 use sigmf::Annotation;
 use sigmf::{DatasetFormat, DescriptionBuilder};
 
+use crate::serde_pmt::from_pmt;
+
 /// Write samples from a SigMF file.
 ///
 /// # Inputs
@@ -80,42 +82,49 @@ where
 }
 
 pub fn convert_pmt_to_annotation(value: &Pmt) -> Option<Annotation> {
-    match value {
-        Pmt::MapStrPmt(dict) => {
-            let mut annot = Annotation::default();
-            let mut is_some = false;
-            if let Some(Pmt::String(label)) = dict.get("label") {
-                annot.label = Some(label.to_owned());
-                is_some = true;
-            }
-            if let Some(Pmt::String(label)) = dict.get("core:label") {
-                annot.label = Some(label.to_owned());
-                is_some = true;
-            }
-            if let Some(Pmt::Usize(annot_sample_start)) = dict.get("sample_start") {
-                annot.sample_start = Some(*annot_sample_start);
-                is_some = true;
-            }
-            if let Some(Pmt::Usize(annot_sample_start)) = dict.get("core:sample_start") {
-                annot.sample_start = Some(*annot_sample_start);
-                is_some = true;
-            }
-            if let Some(Pmt::Usize(annot_sample_count)) = dict.get("sample_count") {
-                annot.sample_count = Some(*annot_sample_count);
-                is_some = true;
-            }
-            if let Some(Pmt::Usize(annot_sample_count)) = dict.get("core:sample_count") {
-                annot.sample_count = Some(*annot_sample_count);
-                is_some = true;
-            }
-            if is_some {
-                Some(annot)
-            } else {
-                None
-            }
-        }
-        _ => None,
+    let annot: crate::serde_pmt::error::Result<Annotation> = from_pmt(value.clone());
+    if let Ok(annot) = annot {
+        //TODO check if at least one field has been deserialized
+        Some(annot)
+    } else {
+        None
     }
+    // match value {
+    //     Pmt::MapStrPmt(dict) => {
+    //         let mut annot = Annotation::default();
+    //         let mut is_some = false;
+    //         if let Some(Pmt::String(label)) = dict.get("label") {
+    //             annot.label = Some(label.to_owned());
+    //             is_some = true;
+    //         }
+    //         if let Some(Pmt::String(label)) = dict.get("core:label") {
+    //             annot.label = Some(label.to_owned());
+    //             is_some = true;
+    //         }
+    //         if let Some(Pmt::Usize(annot_sample_start)) = dict.get("sample_start") {
+    //             annot.sample_start = Some(*annot_sample_start);
+    //             is_some = true;
+    //         }
+    //         if let Some(Pmt::Usize(annot_sample_start)) = dict.get("core:sample_start") {
+    //             annot.sample_start = Some(*annot_sample_start);
+    //             is_some = true;
+    //         }
+    //         if let Some(Pmt::Usize(annot_sample_count)) = dict.get("sample_count") {
+    //             annot.sample_count = Some(*annot_sample_count);
+    //             is_some = true;
+    //         }
+    //         if let Some(Pmt::Usize(annot_sample_count)) = dict.get("core:sample_count") {
+    //             annot.sample_count = Some(*annot_sample_count);
+    //             is_some = true;
+    //         }
+    //         if is_some {
+    //             Some(annot)
+    //         } else {
+    //             None
+    //         }
+    //     }
+    //     _ => None,
+    // }
 }
 
 #[doc(hidden)]

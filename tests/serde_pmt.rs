@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use futuresdr::anyhow::Result;
 use futuresdr::runtime::Pmt;
 
-use fsdr_blocks::serde_pmt::to_pmt;
+use fsdr_blocks::serde_pmt::{from_pmt, to_pmt};
 use serde_json;
 
 #[test]
@@ -15,8 +15,35 @@ fn test_pmt_uint32() -> Result<()> {
 }
 
 #[test]
+fn test_u32_pmt() -> Result<()> {
+    let v: u32 = from_pmt(Pmt::U32(10u32))?;
+    assert_eq!(10u32, v);
+    Ok(())
+}
+
+#[test]
 fn test_pmt_none() -> Result<()> {
     assert_eq!(Pmt::Null, to_pmt(&Option::<u32>::None)?);
+    Ok(())
+}
+
+#[test]
+fn test_none_pmt() -> Result<()> {
+    let v: Option<u32> = from_pmt(Pmt::Null)?;
+    assert_eq!(Option::None, v);
+    Ok(())
+}
+
+#[test]
+fn test_pmt_option_u32() -> Result<()> {
+    assert_eq!(Pmt::U32(10u32), to_pmt(&Some(10u32))?);
+    Ok(())
+}
+
+#[test]
+fn test_option_u32_pmt() -> Result<()> {
+    let v: Option<u32> = from_pmt(Pmt::U32(10u32))?;
+    assert_eq!(Some(10u32), v);
     Ok(())
 }
 
@@ -28,6 +55,13 @@ fn test_pmt_string() -> Result<()> {
         to_pmt(&("a string".to_string()))?
     );
     assert_eq!(Pmt::String("".to_string()), to_pmt(&"")?);
+    Ok(())
+}
+
+#[test]
+fn test_string_pmt() -> Result<()> {
+    let v: String = from_pmt(Pmt::String("foo bar".to_string()))?;
+    assert_eq!("foo bar", v);
     Ok(())
 }
 
@@ -107,5 +141,17 @@ fn test_pmt_sigmf_annot() -> Result<()> {
     );
     expected.insert("some_ext:some_field".to_string(), to_pmt(&456u64)?);
     assert_eq!(Pmt::MapStrPmt(expected.clone()), to_pmt(&annot)?);
+    Ok(())
+}
+
+
+#[test]
+fn test_sigmf_annot_pmt() -> Result<()> {
+    let mut annot = sigmf::Annotation::default();
+    annot.sample_start = Some(0);
+
+    let mut value = HashMap::new();
+    value.insert("core:sample_start".to_string(), Pmt::U64(0));
+    assert_eq!(annot, from_pmt(Pmt::MapStrPmt(value))?);
     Ok(())
 }
