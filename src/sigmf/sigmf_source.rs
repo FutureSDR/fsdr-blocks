@@ -68,6 +68,7 @@ where
     F: FnMut(&[u8]) -> T + Send + 'static,
 {
     /// Create FileSource block
+    #[allow(clippy::new_ret_no_self)]
     pub fn new(reader: R, desc: Description, converter: F) -> Result<Block> {
         let global = desc.global()?;
         let datatype = *global.datatype()?;

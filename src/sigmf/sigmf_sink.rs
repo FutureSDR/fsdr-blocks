@@ -62,6 +62,7 @@ where
     M: Write + std::marker::Send + 'static, //std::io::Write, // + Send + std::marker::Sync,
 {
     /// Create FileSink block
+    #[allow(clippy::new_ret_no_self)]
     pub fn new(writer: W, description: DescriptionBuilder, meta_writer: M) -> Block {
         Block::new(
             BlockMetaBuilder::new("SigMFSink").build(),
@@ -153,13 +154,14 @@ where
         }
         for item in sio.input(0).tags() {
             // let index = item.index;
+            #[allow(clippy::single_match)] // Because of todo!()
             match &item.tag {
                 Tag::Data(pmt) => {
                     if let Some(annot) = convert_pmt_to_annotation(pmt) {
                         self.description.add_annotation(annot)?;
                     }
                 }
-                _ => {}
+                _ => { todo!("Automate other pmt to annotation") }
             }
         }
 
