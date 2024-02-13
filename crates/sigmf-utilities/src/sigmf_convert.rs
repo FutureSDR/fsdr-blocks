@@ -56,9 +56,10 @@ impl Cli {
                 fg.add_block(TypeConvertersBuilder::lossy_scale_convert_f32_i16().build()),
                 fg.add_block(snk.datatype(self.target).build::<i16>().await?),
             ),
-            // Ri32Be | Ri32Le  => {
-            //     fg.add_block(TypeConvertersBuilder::convert::<f32, i32>().build())
-            // }
+            // Ri32Be | Ri32Le  => (
+            //     fg.add_block(TypeConvertersBuilder::lossy_scale_convert_f32_i32().build()),
+            //     fg.add_block(snk.datatype(self.target).build::<i32>().await?),
+            // ),
             // Ru16Be | Ru16Le  => {
             //     fg.add_block(TypeConvertersBuilder::convert::<f32, u16>().build())
             // }

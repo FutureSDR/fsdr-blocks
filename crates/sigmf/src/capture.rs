@@ -10,7 +10,7 @@ pub struct Capture {
     pub sample_start: Option<usize>,
     #[serde(rename = "core:global_index", skip_serializing_if = "Option::is_none")]
     pub global_index: Option<usize>,
-    #[serde(rename = "core:frequence", skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "core:frequency", skip_serializing_if = "Option::is_none")]
     pub frequency: Option<f64>,
     #[serde(rename = "core:datetime", skip_serializing_if = "Option::is_none")]
     pub datetime: Option<String>,
