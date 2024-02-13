@@ -366,7 +366,7 @@ impl<'de> MapAccess<'de> for PmtMapDeserializer {
         T: DeserializeSeed<'de>,
     {
         match self.value.take() {
-            Some(value) => seed.deserialize(PmtDist { 0: value }),
+            Some(value) => seed.deserialize(PmtDist(value)),
             None => Err(serde::de::Error::custom("value is missing")),
         }
     }

@@ -16,19 +16,19 @@ fn qc_big_endian_ends_with_be(dataset: DatasetFormat) -> bool {
 
 #[quickcheck]
 fn qc_complex_starts_with_c(dataset: DatasetFormat) -> bool {
-    !dataset.is_complex() | dataset.to_string().starts_with("c")
+    !dataset.is_complex() | dataset.to_string().starts_with('c')
 }
 
 #[quickcheck]
 fn qc_real_starts_with_r(dataset: DatasetFormat) -> bool {
-    !dataset.is_real() | dataset.to_string().starts_with("r")
+    !dataset.is_real() | dataset.to_string().starts_with('r')
 }
 
 #[quickcheck]
 fn qc_bits_in_label(dataset: DatasetFormat) -> bool {
     let mut nb_bits = dataset.bits();
     if dataset.is_complex() {
-        nb_bits = nb_bits / 2;
+        nb_bits /= 2;
     }
     let nb_bits = nb_bits.to_string().clone();
     let label = dataset.to_string();

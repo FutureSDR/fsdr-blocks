@@ -47,7 +47,7 @@ fn sigmf_source_u8_u8() -> Result<()> {
     let data = [6u8, 8, 10, 12];
     let datatype = DatasetFormat::RU8;
     let snk = test_no_conversion::<u8>(&data, datatype)?;
-    let expected = vec![6u8, 8, 10, 12];
+    let expected = [6u8, 8, 10, 12];
     assert_eq!(snk.len(), expected.len());
     for (o, i) in expected.iter().zip(snk) {
         assert_eq!(*o, i);
@@ -63,7 +63,7 @@ fn sigmf_source_u16_u16() -> Result<()> {
     #[cfg(target_endian = "little")]
     let datatype = DatasetFormat::Ru16Le;
     let snk = test_no_conversion::<u16>(&data, datatype)?;
-    let expected = vec![2054, 3082];
+    let expected = [2054, 3082];
     assert_eq!(expected.len(), snk.len());
     for (expected, actual) in expected.iter().zip(snk) {
         assert_eq!(*expected, actual);
@@ -79,7 +79,7 @@ fn sigmf_source_u32_u32() -> Result<()> {
     #[cfg(target_endian = "little")]
     let datatype = DatasetFormat::Ru32Le;
     let snk = test_no_conversion::<u32>(&data, datatype)?;
-    let expected = vec![201984006].repeat(10);
+    let expected = [201984006].repeat(10);
     assert_eq!(expected.len(), snk.len());
     for (o, i) in expected.iter().zip(snk) {
         assert_eq!(*o, i);
@@ -95,7 +95,7 @@ fn sigmf_source_cu16_cu16() -> Result<()> {
     #[cfg(target_endian = "little")]
     let datatype = DatasetFormat::Cu16Le;
     let snk = test_no_conversion::<Complex<u16>>(&data, datatype)?;
-    let expected = vec![Complex::<u16> { re: 2054, im: 3082 }].repeat(4);
+    let expected = [Complex::<u16> { re: 2054, im: 3082 }].repeat(4);
     assert_eq!(expected.len(), snk.len());
     for (o, i) in expected.iter().zip(snk) {
         assert_eq!(*o, i);

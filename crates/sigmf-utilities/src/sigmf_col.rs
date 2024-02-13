@@ -22,8 +22,8 @@ enum Commands {
     Create {
         #[arg(value_name = "FILE", short, long)]
         output: Option<PathBuf>,
-        #[arg(value_name = "AUTHOR", long)]
-        author: Option<String>,
+        // #[arg(value_name = "AUTHOR", long)]
+        // author: Option<String>,
         #[arg(value_name = "FILE", required = true)]
         files: Vec<PathBuf>,
     },
@@ -35,13 +35,13 @@ enum Commands {
 }
 
 impl Commands {
-    pub fn author(self) -> Option<String> {
-        use Commands::*;
-        match self {
-            Create { author, .. } => author,
-            _ => None,
-        }
-    }
+    // pub fn author(self) -> Option<String> {
+    //     use Commands::*;
+    //     match self {
+    //         Create { author, .. } => author,
+    //         _ => None,
+    //     }
+    // }
 
     pub fn files(&self) -> Result<&Vec<PathBuf>> {
         use Commands::*;
@@ -86,6 +86,7 @@ impl Commands {
         let output = self.output();
         // output.set_extension("sigmf-meta");
         collec
+            // .author(self.author())
             .build()?
             .create_pretty(output)
             .with_context(|| format!("Error writing to {}", &output.display()))?;

@@ -4,7 +4,6 @@ use futuresdr::anyhow::Result;
 use futuresdr::runtime::Pmt;
 
 use fsdr_blocks::serde_pmt::{from_pmt, to_pmt};
-use serde_json;
 
 #[test]
 fn test_pmt_uint32() -> Result<()> {
@@ -125,8 +124,10 @@ fn test_pmt_option_char() -> Result<()> {
 
 #[test]
 fn test_pmt_sigmf_annot() -> Result<()> {
-    let mut annot = sigmf::Annotation::default();
-    annot.sample_start = Some(0);
+    let mut annot = sigmf::Annotation {
+        sample_start: Some(0),
+        ..Default::default()
+    };
     let mut expected = HashMap::new();
     expected.insert("core:sample_start".to_string(), Pmt::U64(0));
     assert_eq!(Pmt::MapStrPmt(expected.clone()), to_pmt(&annot)?);
@@ -146,7 +147,10 @@ fn test_pmt_sigmf_annot() -> Result<()> {
 
 #[test]
 fn test_sigmf_annot_pmt() -> Result<()> {
-    let mut annot = sigmf::Annotation::default();
+    let mut annot = sigmf::Annotation {
+        sample_start: Some(0),
+        ..Default::default()
+    };
     annot.sample_start = Some(0);
 
     let mut value = HashMap::new();

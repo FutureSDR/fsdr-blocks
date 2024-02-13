@@ -161,7 +161,9 @@ where
                         self.description.add_annotation(annot)?;
                     }
                 }
-                _ => { todo!("Automate other pmt to annotation") }
+                _ => {
+                    todo!("Automate other pmt to annotation")
+                }
             }
         }
 

@@ -9,7 +9,7 @@ use sigmf::{DatasetFormat, Description, DescriptionBuilder, SigMFError};
 #[quickcheck]
 fn qc_write_read(desc_input: Description) -> bool {
     let mut buffer = Vec::<u8>::new();
-    if let Err(_) = desc_input.to_writer(&mut buffer) {
+    if desc_input.to_writer(&mut buffer).is_err() {
         return false;
     }
     let buffer = Cursor::new(buffer);

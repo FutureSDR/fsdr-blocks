@@ -15,7 +15,7 @@ use futuresdr::runtime::WorkIo;
 use futuresdr::runtime::{Block, Tag};
 
 use sigmf::RecordingBuilder;
-use sigmf::{Annotation, Capture, Description};
+use sigmf::{Annotation, Description};
 
 use crate::serde_pmt;
 
@@ -52,8 +52,8 @@ where
 {
     reader: R,
     annotations: Vec<Annotation>,
-    captures: Vec<Capture>,
-    global_index: usize,
+    // captures: Vec<Capture>,
+    // global_index: usize,
     sample_index: usize,
     _sample_type: std::marker::PhantomData<T>,
     _reader_type: std::marker::PhantomData<R>,
@@ -77,11 +77,11 @@ where
         } else {
             vec![]
         };
-        let captures = if let Some(capts) = desc.captures {
-            capts
-        } else {
-            vec![]
-        };
+        // let captures = if let Some(capts) = desc.captures {
+        //     capts
+        // } else {
+        //     vec![]
+        // };
         Ok(Block::new(
             BlockMetaBuilder::new("SigMFFileSource").build(),
             StreamIoBuilder::new().add_output::<T>("out").build(),
@@ -89,8 +89,8 @@ where
             SigMFSource::<T, R, F> {
                 reader,
                 annotations,
-                captures,
-                global_index: 0,
+                // captures,
+                // global_index: 0,
                 sample_index: 0,
                 _sample_type: std::marker::PhantomData,
                 _reader_type: std::marker::PhantomData,

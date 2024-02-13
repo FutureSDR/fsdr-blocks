@@ -11,7 +11,7 @@ fn parse_mandatory() -> Result<(), SigMFError> {
     "annotations": []
 }
 "#;
-    let description: Description = serde_json::from_str(&metadata)?;
+    let description: Description = serde_json::from_str(metadata)?;
     let global = description.global()?;
     assert_eq!("1.0.0", global.version()?);
     assert_eq!("cu8", global.datatype()?.to_string());
@@ -45,7 +45,7 @@ fn parse_example_from_spec() -> Result<(), SigMFError> {
     ],
     "annotations": []
 }"#;
-    let description: Description = serde_json::from_str(&metadata)?;
+    let description: Description = serde_json::from_str(metadata)?;
     let global = description.global()?;
     assert_eq!("1.0.0", global.version()?);
     assert_eq!("ru8", global.datatype()?.to_string());
@@ -170,7 +170,7 @@ fn parse_antenna() -> Result<(), SigMFError> {
     "annotations": []
 }
 "#;
-    let description: Description = serde_json::from_str(&metadata)?;
+    let description: Description = serde_json::from_str(metadata)?;
     let global = description.global()?;
     assert_eq!("1.0.0", global.version()?);
     assert_eq!("cu8", global.datatype()?.to_string());

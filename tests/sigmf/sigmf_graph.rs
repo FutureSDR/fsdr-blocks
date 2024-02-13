@@ -101,7 +101,7 @@ fn sigmf_read_write_annotation() -> Result<()> {
     desc.add_annotation(annot)?;
     let desc = desc.build()?;
 
-    let actual_file = Cursor::new(Vec::from(data));
+    let actual_file = Cursor::new(data);
     let actual_file = BufReader::new(actual_file);
     let src1 = futuresdr::futures::executor::block_on(
         SigMFSourceBuilder::with_data_and_description(actual_file, desc).build::<u8>(),
@@ -129,7 +129,7 @@ fn sigmf_read_write_annotation() -> Result<()> {
     let annotations = tgt_desc.annotations()?;
     assert_eq!(2, annotations.len());
     let annot1 = annotations
-        .get(0)
+        .first()
         .expect("the annotation should have been recreated");
     assert_eq!(
         "the comment",
@@ -149,7 +149,7 @@ fn sigmf_read_write_annotation() -> Result<()> {
     );
 
     let annot1 = annotations
-        .get(0)
+        .first()
         .expect("the annotation should have been recreated");
     assert_eq!(
         "the comment",
