@@ -1,8 +1,11 @@
-use std::{collections::HashMap, borrow::Cow};
+use std::{borrow::Cow, collections::HashMap};
 
-use futuresdr::runtime::Pmt;
-use serde::{de::{Expected, Unexpected, Visitor, MapAccess, DeserializeSeed}, forward_to_deserialize_any, Deserializer};
 use super::error::{Error, Result};
+use futuresdr::runtime::Pmt;
+use serde::{
+    de::{DeserializeSeed, Expected, MapAccess, Unexpected, Visitor},
+    forward_to_deserialize_any, Deserializer,
+};
 
 pub struct PmtDist(Pmt);
 
@@ -40,7 +43,8 @@ impl<'de> serde::Deserializer<'de> for PmtDist {
 
     fn deserialize_any<V>(self, visitor: V) -> std::prelude::v1::Result<V::Value, Self::Error>
     where
-        V: serde::de::Visitor<'de> {
+        V: serde::de::Visitor<'de>,
+    {
         match self.0 {
             Pmt::Bool(v) => visitor.visit_bool(v),
             Pmt::F32(v) => visitor.visit_f32(v),
@@ -50,58 +54,66 @@ impl<'de> serde::Deserializer<'de> for PmtDist {
             Pmt::Null => visitor.visit_unit(),
             Pmt::String(v) => visitor.visit_string(v),
             Pmt::Usize(v) => visitor.visit_u64(v as u64),
-            _ => Err(self::Error::Message("Not yet implemented".to_string()))
+            _ => Err(self::Error::Message("Not yet implemented".to_string())),
         }
     }
 
     fn deserialize_bool<V>(self, visitor: V) -> std::prelude::v1::Result<V::Value, Self::Error>
     where
-        V: serde::de::Visitor<'de> {
-            match self.0 {
-                Pmt::Bool(v) => visitor.visit_bool(v),
-                _ => Err(self.invalid_type(&visitor)),
-            }
+        V: serde::de::Visitor<'de>,
+    {
+        match self.0 {
+            Pmt::Bool(v) => visitor.visit_bool(v),
+            _ => Err(self.invalid_type(&visitor)),
+        }
     }
 
-    fn deserialize_i8<V>(self, visitor: V) -> std::prelude::v1::Result<V::Value, Self::Error>
+    fn deserialize_i8<V>(self, _visitor: V) -> std::prelude::v1::Result<V::Value, Self::Error>
     where
-        V: serde::de::Visitor<'de> {
+        V: serde::de::Visitor<'de>,
+    {
         todo!()
     }
 
-    fn deserialize_i16<V>(self, visitor: V) -> std::prelude::v1::Result<V::Value, Self::Error>
+    fn deserialize_i16<V>(self, _visitor: V) -> std::prelude::v1::Result<V::Value, Self::Error>
     where
-        V: serde::de::Visitor<'de> {
+        V: serde::de::Visitor<'de>,
+    {
         todo!()
     }
 
-    fn deserialize_i32<V>(self, visitor: V) -> std::prelude::v1::Result<V::Value, Self::Error>
+    fn deserialize_i32<V>(self, _visitor: V) -> std::prelude::v1::Result<V::Value, Self::Error>
     where
-        V: serde::de::Visitor<'de> {
+        V: serde::de::Visitor<'de>,
+    {
         todo!()
     }
 
-    fn deserialize_i64<V>(self, visitor: V) -> std::prelude::v1::Result<V::Value, Self::Error>
+    fn deserialize_i64<V>(self, _visitor: V) -> std::prelude::v1::Result<V::Value, Self::Error>
     where
-        V: serde::de::Visitor<'de> {
+        V: serde::de::Visitor<'de>,
+    {
         todo!()
     }
 
-    fn deserialize_u8<V>(self, visitor: V) -> std::prelude::v1::Result<V::Value, Self::Error>
+    fn deserialize_u8<V>(self, _visitor: V) -> std::prelude::v1::Result<V::Value, Self::Error>
     where
-        V: serde::de::Visitor<'de> {
+        V: serde::de::Visitor<'de>,
+    {
         todo!()
     }
 
-    fn deserialize_u16<V>(self, visitor: V) -> std::prelude::v1::Result<V::Value, Self::Error>
+    fn deserialize_u16<V>(self, _visitor: V) -> std::prelude::v1::Result<V::Value, Self::Error>
     where
-        V: serde::de::Visitor<'de> {
+        V: serde::de::Visitor<'de>,
+    {
         todo!()
     }
 
     fn deserialize_u32<V>(self, visitor: V) -> std::prelude::v1::Result<V::Value, Self::Error>
     where
-        V: serde::de::Visitor<'de> {
+        V: serde::de::Visitor<'de>,
+    {
         match self.0 {
             Pmt::U32(v) => visitor.visit_u32(v),
             _ => Err(self.invalid_type(&visitor)),
@@ -110,163 +122,191 @@ impl<'de> serde::Deserializer<'de> for PmtDist {
 
     fn deserialize_u64<V>(self, visitor: V) -> std::prelude::v1::Result<V::Value, Self::Error>
     where
-        V: serde::de::Visitor<'de> {
-            match self.0 {
-                Pmt::U64(v) => visitor.visit_u64(v),
-                _ => Err(self.invalid_type(&visitor)),
-            }
+        V: serde::de::Visitor<'de>,
+    {
+        match self.0 {
+            Pmt::U64(v) => visitor.visit_u64(v),
+            _ => Err(self.invalid_type(&visitor)),
+        }
     }
 
-    fn deserialize_f32<V>(self, visitor: V) -> std::prelude::v1::Result<V::Value, Self::Error>
+    fn deserialize_f32<V>(self, _visitor: V) -> std::prelude::v1::Result<V::Value, Self::Error>
     where
-        V: serde::de::Visitor<'de> {
+        V: serde::de::Visitor<'de>,
+    {
         todo!()
     }
 
-    fn deserialize_f64<V>(self, visitor: V) -> std::prelude::v1::Result<V::Value, Self::Error>
+    fn deserialize_f64<V>(self, _visitor: V) -> std::prelude::v1::Result<V::Value, Self::Error>
     where
-        V: serde::de::Visitor<'de> {
+        V: serde::de::Visitor<'de>,
+    {
         todo!()
     }
 
-    fn deserialize_char<V>(self, visitor: V) -> std::prelude::v1::Result<V::Value, Self::Error>
+    fn deserialize_char<V>(self, _visitor: V) -> std::prelude::v1::Result<V::Value, Self::Error>
     where
-        V: serde::de::Visitor<'de> {
+        V: serde::de::Visitor<'de>,
+    {
         todo!()
     }
 
-    fn deserialize_str<V>(self, visitor: V) -> std::prelude::v1::Result<V::Value, Self::Error>
+    fn deserialize_str<V>(self, _visitor: V) -> std::prelude::v1::Result<V::Value, Self::Error>
     where
-        V: serde::de::Visitor<'de> {
+        V: serde::de::Visitor<'de>,
+    {
         todo!()
     }
 
     fn deserialize_string<V>(self, visitor: V) -> std::prelude::v1::Result<V::Value, Self::Error>
     where
-        V: serde::de::Visitor<'de> {
-            match self.0 {
-                Pmt::String(v) => visitor.visit_string(v),
-                _ => Err(self.invalid_type(&visitor)),
-            }
+        V: serde::de::Visitor<'de>,
+    {
+        match self.0 {
+            Pmt::String(v) => visitor.visit_string(v),
+            _ => Err(self.invalid_type(&visitor)),
+        }
     }
 
-    fn deserialize_bytes<V>(self, visitor: V) -> std::prelude::v1::Result<V::Value, Self::Error>
+    fn deserialize_bytes<V>(self, _visitor: V) -> std::prelude::v1::Result<V::Value, Self::Error>
     where
-        V: serde::de::Visitor<'de> {
+        V: serde::de::Visitor<'de>,
+    {
         todo!()
     }
 
-    fn deserialize_byte_buf<V>(self, visitor: V) -> std::prelude::v1::Result<V::Value, Self::Error>
+    fn deserialize_byte_buf<V>(self, _visitor: V) -> std::prelude::v1::Result<V::Value, Self::Error>
     where
-        V: serde::de::Visitor<'de> {
+        V: serde::de::Visitor<'de>,
+    {
         todo!()
     }
 
     fn deserialize_option<V>(self, visitor: V) -> std::prelude::v1::Result<V::Value, Self::Error>
     where
-        V: serde::de::Visitor<'de> {
-            match self.0 {
-                Pmt::Null => visitor.visit_unit(),
-                _ => visitor.visit_some(self),
-            }
+        V: serde::de::Visitor<'de>,
+    {
+        match self.0 {
+            Pmt::Null => visitor.visit_unit(),
+            _ => visitor.visit_some(self),
+        }
     }
 
     fn deserialize_unit<V>(self, visitor: V) -> std::prelude::v1::Result<V::Value, Self::Error>
     where
-        V: serde::de::Visitor<'de> {
-            match self.0 {
-                Pmt::Null => visitor.visit_unit(),
-                _ => Err(self.invalid_type(&visitor)),
-            }
+        V: serde::de::Visitor<'de>,
+    {
+        match self.0 {
+            Pmt::Null => visitor.visit_unit(),
+            _ => Err(self.invalid_type(&visitor)),
+        }
     }
 
     fn deserialize_unit_struct<V>(
         self,
-        name: &'static str,
-        visitor: V,
+        _name: &'static str,
+        _visitor: V,
     ) -> std::prelude::v1::Result<V::Value, Self::Error>
     where
-        V: serde::de::Visitor<'de> {
+        V: serde::de::Visitor<'de>,
+    {
         todo!()
     }
 
     fn deserialize_newtype_struct<V>(
         self,
-        name: &'static str,
-        visitor: V,
+        _name: &'static str,
+        _visitor: V,
     ) -> std::prelude::v1::Result<V::Value, Self::Error>
     where
-        V: serde::de::Visitor<'de> {
+        V: serde::de::Visitor<'de>,
+    {
         todo!()
     }
 
-    fn deserialize_seq<V>(self, visitor: V) -> std::prelude::v1::Result<V::Value, Self::Error>
+    fn deserialize_seq<V>(self, _visitor: V) -> std::prelude::v1::Result<V::Value, Self::Error>
     where
-        V: serde::de::Visitor<'de> {
+        V: serde::de::Visitor<'de>,
+    {
         todo!()
     }
 
-    fn deserialize_tuple<V>(self, len: usize, visitor: V) -> std::prelude::v1::Result<V::Value, Self::Error>
+    fn deserialize_tuple<V>(
+        self,
+        _len: usize,
+        _visitor: V,
+    ) -> std::prelude::v1::Result<V::Value, Self::Error>
     where
-        V: serde::de::Visitor<'de> {
+        V: serde::de::Visitor<'de>,
+    {
         todo!()
     }
 
     fn deserialize_tuple_struct<V>(
         self,
-        name: &'static str,
-        len: usize,
-        visitor: V,
+        _name: &'static str,
+        _len: usize,
+        _visitor: V,
     ) -> std::prelude::v1::Result<V::Value, Self::Error>
     where
-        V: serde::de::Visitor<'de> {
+        V: serde::de::Visitor<'de>,
+    {
         todo!()
     }
 
     fn deserialize_map<V>(self, visitor: V) -> std::prelude::v1::Result<V::Value, Self::Error>
     where
-        V: serde::de::Visitor<'de> {
-            match self.0 {
-                Pmt::MapStrPmt(v) => visit_object(v, visitor),
-                _ => Err(self.invalid_type(&visitor)),
-            }
+        V: serde::de::Visitor<'de>,
+    {
+        match self.0 {
+            Pmt::MapStrPmt(v) => visit_object(v, visitor),
+            _ => Err(self.invalid_type(&visitor)),
+        }
     }
 
     fn deserialize_struct<V>(
         self,
-        name: &'static str,
-        fields: &'static [&'static str],
-        visitor: V,
+        _name: &'static str,
+        _fields: &'static [&'static str],
+        _visitor: V,
     ) -> std::prelude::v1::Result<V::Value, Self::Error>
     where
-        V: serde::de::Visitor<'de> {
+        V: serde::de::Visitor<'de>,
+    {
         todo!()
     }
 
     fn deserialize_enum<V>(
         self,
-        name: &'static str,
-        variants: &'static [&'static str],
-        visitor: V,
+        _name: &'static str,
+        _variants: &'static [&'static str],
+        _visitor: V,
     ) -> std::prelude::v1::Result<V::Value, Self::Error>
     where
-        V: serde::de::Visitor<'de> {
+        V: serde::de::Visitor<'de>,
+    {
         todo!()
     }
 
-    fn deserialize_identifier<V>(self, visitor: V) -> std::prelude::v1::Result<V::Value, Self::Error>
+    fn deserialize_identifier<V>(
+        self,
+        _visitor: V,
+    ) -> std::prelude::v1::Result<V::Value, Self::Error>
     where
-        V: serde::de::Visitor<'de> {
+        V: serde::de::Visitor<'de>,
+    {
         todo!()
     }
 
-    fn deserialize_ignored_any<V>(self, visitor: V) -> std::prelude::v1::Result<V::Value, Self::Error>
+    fn deserialize_ignored_any<V>(
+        self,
+        _visitor: V,
+    ) -> std::prelude::v1::Result<V::Value, Self::Error>
     where
-        V: serde::de::Visitor<'de> {
+        V: serde::de::Visitor<'de>,
+    {
         todo!()
     }
-
-  
 }
 
 fn visit_object<'de, V>(object: HashMap<String, Pmt>, visitor: V) -> Result<V::Value>
@@ -326,7 +366,7 @@ impl<'de> MapAccess<'de> for PmtMapDeserializer {
         T: DeserializeSeed<'de>,
     {
         match self.value.take() {
-            Some(value) => seed.deserialize(PmtDist{0: value}),
+            Some(value) => seed.deserialize(PmtDist { 0: value }),
             None => Err(serde::de::Error::custom("value is missing")),
         }
     }
@@ -342,7 +382,6 @@ impl<'de> MapAccess<'de> for PmtMapDeserializer {
 struct MapKeyDeserializer<'de> {
     key: Cow<'de, str>,
 }
-
 
 impl<'de> serde::Deserializer<'de> for MapKeyDeserializer<'de> {
     type Error = Error;

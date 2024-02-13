@@ -107,7 +107,6 @@ fn sigmf_read_write_annotation() -> Result<()> {
         SigMFSourceBuilder::with_data_and_description(actual_file, desc).build::<u8>(),
     )?;
 
-    
     let data_file_content: Vec<u8> = vec![];
     let meta_file_content: Vec<u8> = vec![];
     let data_file = std::io::Cursor::new(data_file_content);
@@ -128,14 +127,46 @@ fn sigmf_read_write_annotation() -> Result<()> {
         .unwrap();
     let tgt_desc = snk1.description.build()?;
     let annotations = tgt_desc.annotations()?;
-    assert_eq!(2, annotations.len()); 
-    let annot1 = annotations.get(0).expect("the annotation should have been recreated");
-    assert_eq!("the comment", annot1.comment.as_ref().expect("comment should have been copied").as_str());
-    assert_eq!("abc", annot1.label.as_ref().expect("label should have been copied").as_str());
+    assert_eq!(2, annotations.len());
+    let annot1 = annotations
+        .get(0)
+        .expect("the annotation should have been recreated");
+    assert_eq!(
+        "the comment",
+        annot1
+            .comment
+            .as_ref()
+            .expect("comment should have been copied")
+            .as_str()
+    );
+    assert_eq!(
+        "abc",
+        annot1
+            .label
+            .as_ref()
+            .expect("label should have been copied")
+            .as_str()
+    );
 
-    let annot1 = annotations.get(0).expect("the annotation should have been recreated");
-    assert_eq!("the comment", annot1.comment.as_ref().expect("comment should have been copied").as_str());
-    assert_eq!("abc", annot1.label.as_ref().expect("label should have been copied").as_str());
+    let annot1 = annotations
+        .get(0)
+        .expect("the annotation should have been recreated");
+    assert_eq!(
+        "the comment",
+        annot1
+            .comment
+            .as_ref()
+            .expect("comment should have been copied")
+            .as_str()
+    );
+    assert_eq!(
+        "abc",
+        annot1
+            .label
+            .as_ref()
+            .expect("label should have been copied")
+            .as_str()
+    );
 
     Ok(())
 }

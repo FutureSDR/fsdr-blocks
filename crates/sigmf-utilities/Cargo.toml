@@ -21,8 +21,8 @@ anyhow = { version = "1.0.75"}
 sigmf = {path="../sigmf"}
 walkdir = "2.4.0"
 fsdr-blocks = {path="../../"}
-# futuresdr = { git = "https://github.com/FutureSDR/FutureSDR", branch = "main" }
-futuresdr = {path="../../../FutureSDR"}
+futuresdr = { git = "https://github.com/FutureSDR/FutureSDR", branch = "main" }
+#futuresdr = {path="../../../FutureSDR"}
 
 [build-dependencies]
 rustc_version = "0.4.0"

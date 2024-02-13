@@ -1,4 +1,4 @@
-use core::fmt::{self, Display};
+use core::fmt::Display;
 use futuresdr::runtime::Pmt;
 use serde::{
     ser::{self, Impossible},
@@ -6,7 +6,10 @@ use serde::{
 };
 use std::collections::HashMap;
 
-use super::{error::{Error, Result}, to_pmt};
+use super::{
+    error::{Error, Result},
+    to_pmt,
+};
 
 pub struct Serializer {}
 
@@ -103,14 +106,14 @@ impl<'a> serde::Serializer for &'a mut Serializer {
         Ok(Pmt::Null)
     }
 
-    fn serialize_unit_struct(self, name: &'static str) -> Result<Self::Ok> {
+    fn serialize_unit_struct(self, _name: &'static str) -> Result<Self::Ok> {
         self.serialize_unit()
     }
 
     fn serialize_unit_variant(
         self,
-        name: &'static str,
-        variant_index: u32,
+        _name: &'static str,
+        _variant_index: u32,
         variant: &'static str,
     ) -> std::prelude::v1::Result<Self::Ok, Self::Error> {
         self.serialize_str(variant)
@@ -118,7 +121,7 @@ impl<'a> serde::Serializer for &'a mut Serializer {
 
     fn serialize_newtype_struct<T: ?Sized>(
         self,
-        name: &'static str,
+        _name: &'static str,
         value: &T,
     ) -> std::prelude::v1::Result<Self::Ok, Self::Error>
     where
@@ -129,8 +132,8 @@ impl<'a> serde::Serializer for &'a mut Serializer {
 
     fn serialize_newtype_variant<T>(
         self,
-        name: &'static str,
-        variant_index: u32,
+        _name: &'static str,
+        _variant_index: u32,
         variant: &'static str,
         value: &T,
     ) -> std::prelude::v1::Result<Self::Ok, Self::Error>
@@ -144,7 +147,7 @@ impl<'a> serde::Serializer for &'a mut Serializer {
 
     fn serialize_seq(
         self,
-        len: Option<usize>,
+        _len: Option<usize>,
     ) -> std::prelude::v1::Result<Self::SerializeSeq, Self::Error> {
         // Ok(SerializeVec {
         //     vec: Vec::with_capacity(len.unwrap_or(0)),
@@ -161,7 +164,7 @@ impl<'a> serde::Serializer for &'a mut Serializer {
 
     fn serialize_tuple_struct(
         self,
-        name: &'static str,
+        _name: &'static str,
         len: usize,
     ) -> std::prelude::v1::Result<Self::SerializeTupleStruct, Self::Error> {
         self.serialize_seq(Some(len))
@@ -169,10 +172,10 @@ impl<'a> serde::Serializer for &'a mut Serializer {
 
     fn serialize_tuple_variant(
         self,
-        name: &'static str,
-        variant_index: u32,
-        variant: &'static str,
-        len: usize,
+        _name: &'static str,
+        _variant_index: u32,
+        _variant: &'static str,
+        _len: usize,
     ) -> std::prelude::v1::Result<Self::SerializeTupleVariant, Self::Error> {
         // Ok(SerializeTupleVariant {
         //     name: String::from(variant),
@@ -183,7 +186,7 @@ impl<'a> serde::Serializer for &'a mut Serializer {
 
     fn serialize_map(
         self,
-        len: Option<usize>,
+        _len: Option<usize>,
     ) -> std::prelude::v1::Result<Self::SerializeMap, Self::Error> {
         Ok(SerializeMap {
             map: HashMap::new(),
@@ -193,7 +196,7 @@ impl<'a> serde::Serializer for &'a mut Serializer {
 
     fn serialize_struct(
         self,
-        name: &'static str,
+        _name: &'static str,
         len: usize,
     ) -> std::prelude::v1::Result<Self::SerializeStruct, Self::Error> {
         self.serialize_map(Some(len))
@@ -201,10 +204,10 @@ impl<'a> serde::Serializer for &'a mut Serializer {
 
     fn serialize_struct_variant(
         self,
-        name: &'static str,
-        variant_index: u32,
-        variant: &'static str,
-        len: usize,
+        _name: &'static str,
+        _variant_index: u32,
+        _variant: &'static str,
+        _len: usize,
     ) -> std::prelude::v1::Result<Self::SerializeStructVariant, Self::Error> {
         // Ok(SerializeStructVariant {
         //     name: String::from(variant),

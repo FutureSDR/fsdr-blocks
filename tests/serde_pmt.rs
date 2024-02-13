@@ -144,7 +144,6 @@ fn test_pmt_sigmf_annot() -> Result<()> {
     Ok(())
 }
 
-
 #[test]
 fn test_sigmf_annot_pmt() -> Result<()> {
     let mut annot = sigmf::Annotation::default();

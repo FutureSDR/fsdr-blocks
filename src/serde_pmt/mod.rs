@@ -2,12 +2,11 @@ pub mod error;
 
 mod serialiser;
 use futuresdr::runtime::Pmt;
-use serde::{Serialize, de::DeserializeOwned};
-pub use serialiser::{Serializer};
+use serde::{de::DeserializeOwned, Serialize};
+pub use serialiser::Serializer;
 
 use self::deserialiser::PmtDist;
 mod deserialiser;
-
 
 pub fn to_pmt<T>(value: &T) -> error::Result<Pmt>
 where
