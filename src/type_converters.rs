@@ -106,36 +106,90 @@ where
 
 impl ScaledConverterBuilder<u8, f32> {
     pub fn build(self) -> Block {
-        Apply::new(|i: &u8| -> f32 { (*i as f32) / ((u8::MAX as f32) / 2.0) - 1.0 })
+        Apply::new(|i: &u8| -> f32 { ScaledConverterBuilder::<u8, f32>::convert(i) })
+    }
+
+    pub fn convert(i: &u8) -> f32 {
+        (*i as f32) / ((u8::MAX as f32) / 2.0) - 1.0
+    }
+}
+
+impl ScaledConverterBuilder<u16, f32> {
+    pub fn build(self) -> Block {
+        Apply::new(|i: &u16| -> f32 { ScaledConverterBuilder::<u16, f32>::convert(i) })
+    }
+
+    pub fn convert(i: &u16) -> f32 {
+        (*i as f32) / ((u16::MAX as f32) / 2.0) - 1.0
+    }
+}
+
+impl ScaledConverterBuilder<u32, f32> {
+    pub fn build(self) -> Block {
+        Apply::new(|i: &u32| -> f32 { ScaledConverterBuilder::<u32, f32>::convert(i) })
+    }
+
+    pub fn convert(i: &u32) -> f32 {
+        (*i as f32) / ((u32::MAX as f32) / 2.0) - 1.0
     }
 }
 
 impl ScaledConverterBuilder<i8, f32> {
     pub fn build(self) -> Block {
-        Apply::new(|i: &i8| -> f32 { (*i as f32) / ((i8::MAX as f32) / 2.0) - 1.0 })
+        Apply::new(|i: &i8| -> f32 { ScaledConverterBuilder::<i8, f32>::convert(i) })
+    }
+
+    pub fn convert(i: &i8) -> f32 {
+        (*i as f32) / ((i8::MAX as f32) / 2.0) - 1.0
     }
 }
 
 impl ScaledConverterBuilder<i16, f32> {
     pub fn build(self) -> Block {
-        Apply::new(|i: &i16| -> f32 { (*i as f32) / ((i16::MAX as f32) / 2.0) - 1.0 })
+        Apply::new(|i: &i16| -> f32 { ScaledConverterBuilder::<i16, f32>::convert(i) })
+    }
+
+    pub fn convert(i: &i16) -> f32 {
+        (*i as f32) / ((i16::MAX as f32) / 2.0) - 1.0
+    }
+}
+
+impl ScaledConverterBuilder<i32, f32> {
+    pub fn build(self) -> Block {
+        Apply::new(|i: &i32| -> f32 { ScaledConverterBuilder::<i32, f32>::convert(i) })
+    }
+
+    pub fn convert(i: &i32) -> f32 {
+        (*i as f32) / ((i32::MAX as f32) / 2.0) - 1.0
     }
 }
 
 impl ScaledConverterBuilder<f32, u8> {
     pub fn build(self) -> Block {
-        Apply::new(|i: &f32| -> u8 { (*i * (u8::MAX as f32) * 0.5 + 128.0) as u8 })
+        Apply::new(|i: &f32| -> u8 { ScaledConverterBuilder::<f32, u8>::convert(i) })
+    }
+
+    pub fn convert(i: &f32) -> u8 {
+        (*i * (u8::MAX as f32) * 0.5 + 128.0) as u8
     }
 }
 
 impl ScaledConverterBuilder<f32, i8> {
     pub fn build(self) -> Block {
-        Apply::new(|i: &f32| -> i8 { (*i * (i8::MAX as f32)) as i8 })
+        Apply::new(|i: &f32| -> i8 { ScaledConverterBuilder::<f32, i8>::convert(i) })
+    }
+
+    pub fn convert(i: &f32) -> i8 {
+        (*i * (i8::MAX as f32)) as i8
     }
 }
 
 impl ScaledConverterBuilder<f32, i16> {
     pub fn build(self) -> Block {
-        Apply::new(|i: &f32| -> i16 { (*i * (i16::MAX as f32)) as i16 })
+        Apply::new(|i: &f32| -> i16 { ScaledConverterBuilder::<f32, i16>::convert(i) })
+    }
+
+    pub fn convert(i: &f32) -> i16 {
+        (*i * (i16::MAX as f32)) as i16
     }
 }
