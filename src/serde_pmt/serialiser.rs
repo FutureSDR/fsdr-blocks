@@ -95,9 +95,9 @@ impl<'a> serde::Serializer for &'a mut Serializer {
         Ok(Pmt::Null)
     }
 
-    fn serialize_some<T: ?Sized>(self, value: &T) -> Result<Self::Ok>
+    fn serialize_some<T>(self, value: &T) -> Result<Self::Ok>
     where
-        T: Serialize,
+        T: Serialize + ?Sized,
     {
         value.serialize(self)
     }
@@ -119,13 +119,13 @@ impl<'a> serde::Serializer for &'a mut Serializer {
         self.serialize_str(variant)
     }
 
-    fn serialize_newtype_struct<T: ?Sized>(
+    fn serialize_newtype_struct<T>(
         self,
         _name: &'static str,
         value: &T,
     ) -> std::prelude::v1::Result<Self::Ok, Self::Error>
     where
-        T: Serialize,
+        T: Serialize + ?Sized,
     {
         value.serialize(self)
     }

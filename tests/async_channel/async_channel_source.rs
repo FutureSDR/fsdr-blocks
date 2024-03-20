@@ -1,4 +1,4 @@
-use fsdr_blocks::channel::CrossbeamSource;
+use fsdr_blocks::async_channel::AsyncChannelSource;
 use futuresdr::anyhow::Result;
 use futuresdr::blocks::{Head, VectorSink, VectorSinkBuilder};
 use futuresdr::log::debug;
@@ -6,24 +6,29 @@ use futuresdr::macros::connect;
 use futuresdr::runtime::{Flowgraph, Runtime};
 
 #[test]
-fn crossbeam_source_u32() -> Result<()> {
+fn run_async_channel_source_u32() -> Result<()> {
+    tokio_test::block_on(async_channel_source_u32())
+}
+
+async fn async_channel_source_u32() -> Result<()> {
     let mut fg = Flowgraph::new();
     let orig = vec![0, 1, 2];
-    let (tx, rx) = crossbeam_channel::unbounded::<Box<[u32]>>();
+    let (tx, rx) = async_channel::unbounded::<Box<[u32]>>();
 
-    let crossbeam_source = CrossbeamSource::<u32>::new(rx);
+    let async_channel_src = AsyncChannelSource::<u32>::new(rx);
     let limit = Head::<u32>::new(orig.len() as u64);
-    let vector_sink = VectorSinkBuilder::<u32>::new().build();
+    let vector_snk = VectorSinkBuilder::<u32>::new().build();
 
     connect!(fg,
-        crossbeam_source > limit > vector_sink;
+        async_channel_src > limit > vector_snk;
     );
 
-    tx.try_send(orig.clone().into_boxed_slice()).unwrap();
+    tx.send(orig.clone().into_boxed_slice()).await.unwrap();
+    tx.close();
 
     fg = Runtime::new().run(fg)?;
 
-    let snk = fg.kernel::<VectorSink<u32>>(vector_sink).unwrap();
+    let snk = fg.kernel::<VectorSink<u32>>(vector_snk).unwrap();
     let received = snk.items();
 
     debug!("{}", received.len());

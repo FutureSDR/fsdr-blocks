@@ -19,7 +19,7 @@ pub fn bench_baseband_to_cw(c: &mut Criterion) {
 
     group.throughput(criterion::Throughput::Elements(baseband.len() as u64));
 
-    group.bench_function(format!("mock-baseband-to-cw"), |b| {
+    group.bench_function("mock-baseband-to-cw", |b| {
         b.iter(|| {
             let block = BaseBandToCW::new_typed(100, samples_per_dot);
             let mut mocker = Mocker::new(block);

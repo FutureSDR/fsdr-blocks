@@ -1,5 +1,6 @@
+use async_trait::async_trait;
+
 use futuresdr::anyhow::Result;
-use futuresdr::async_trait::async_trait;
 use futuresdr::runtime::BlockMeta;
 use futuresdr::runtime::BlockMetaBuilder;
 use futuresdr::runtime::Kernel;

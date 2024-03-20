@@ -19,7 +19,7 @@ pub fn crossbeam_sink_boxed_slice_u32(c: &mut Criterion) {
 
     group.throughput(criterion::Throughput::Elements(n_samp as u64));
 
-    group.bench_function(format!("mock-u32-crossbeam-sink"), |b| {
+    group.bench_function("mock-u32-crossbeam-sink", |b| {
         b.iter(|| {
             let block = CrossbeamSink::new_typed(tx.clone());
             let mut mocker = Mocker::new(block);

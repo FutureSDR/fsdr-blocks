@@ -1,3 +1,5 @@
+#[cfg(feature = "async-channel")]
+mod async_channel;
 #[cfg(feature = "crossbeam")]
 mod channel;
 #[cfg(feature = "cw")]

@@ -13,9 +13,9 @@ cd ${SCRIPTPATH} && cargo fmt --check
 ###########################################################
 # CLIPPY
 ###########################################################
-cd ${SCRIPTPATH} && cargo clippy --all-targets --workspace 
+cd ${SCRIPTPATH} && cargo clippy --all-targets --all-features --workspace 
 
 ###########################################################
 # Test
 ###########################################################
-cd ${SCRIPTPATH} && cargo test --all-targets --workspace 
+cd ${SCRIPTPATH} && cargo test --all-targets --all-features --workspace 

@@ -16,7 +16,7 @@ pub fn bench_cw_to_char(c: &mut Criterion) {
 
     group.throughput(criterion::Throughput::Elements(cw.len() as u64));
 
-    group.bench_function(format!("mock-cw-to-char"), |b| {
+    group.bench_function("mock-cw-to-char", |b| {
         b.iter(|| {
             let block = CWToChar::new_typed(get_alphabet());
             let mut mocker = Mocker::new(block);
