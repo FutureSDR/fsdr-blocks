@@ -17,7 +17,7 @@ pub fn bench_char_to_baseband(c: &mut Criterion) {
 
     group.throughput(criterion::Throughput::Elements(bb.len() as u64));
 
-    group.bench_function(format!("char_to_bb"), |b| {
+    group.bench_function("char_to_bb", |b| {
         b.iter(|| {
             message
                 .chars()
@@ -42,7 +42,7 @@ pub fn bench_msg_to_cw(c: &mut Criterion) {
 
     group.throughput(criterion::Throughput::Elements(msg_slice.len() as u64));
 
-    group.bench_function(format!("msg_to_cw"), |b| {
+    group.bench_function("msg_to_cw", |b| {
         b.iter(|| {
             msg_to_cw(msg_slice);
         });

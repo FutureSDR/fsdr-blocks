@@ -1,7 +1,8 @@
-use async_trait::async_trait;
-use crossbeam_channel::Sender;
+use async_channel::Sender;
+
 use futuresdr::anyhow::Result;
 use futuresdr::log::info;
+use futuresdr::runtime::Block;
 use futuresdr::runtime::BlockMeta;
 use futuresdr::runtime::BlockMetaBuilder;
 use futuresdr::runtime::Kernel;
@@ -10,56 +11,46 @@ use futuresdr::runtime::MessageIoBuilder;
 use futuresdr::runtime::StreamIo;
 use futuresdr::runtime::StreamIoBuilder;
 use futuresdr::runtime::WorkIo;
-use futuresdr::runtime::{Block, TypedBlock};
 
-/// Push samples originating from a stream in a flowgraph into a crossbeam channel.
+/// Get samples out of a Flowgraph into a channel.
 ///
 /// # Inputs
 ///
-/// `in`: Samples pushed into the channel
+/// `in`: Samples retrieved from teh flowgraph
 ///
 /// # Usage
 /// ```
-/// use crossbeam_channel;
-/// use fsdr_blocks::channel::CrossbeamSink;
+/// use async_channel;
 /// use futuresdr::blocks::VectorSource;
-/// use futuresdr::runtime::{Flowgraph, Runtime};
+/// use fsdr-blocks::blocks::AsyncChannelSink
+/// use futuresdr::runtime::Flowgraph;
 ///
 /// let mut fg = Flowgraph::new();
-/// let (tx, rx) = crossbeam_channel::unbounded::<Box<[f32]>>();
-///
-/// let orig: Vec<f32> = vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0];
-/// let vector_src = fg.add_block(VectorSource::<f32>::new(orig.clone()));
-/// let crossbeam_sink = fg.add_block(CrossbeamSink::<f32>::new(tx.clone()));
-///
-/// fg.connect_stream(vector_src, "out", crossbeam_sink, "in").unwrap();
-/// Runtime::new().run(fg).unwrap();
-///
-/// assert_eq!(orig, rx.recv().unwrap().to_vec());
+/// let (tx, rx) = async_channel::unbounded::<Box<[u32]>>();
+/// let vec = vec![0, 1, 2];
+/// let src = fg.add_block(VectorSource::<u32>::new(vec));
+/// let cs = fg.add_block(AsyncChannelSink::<u32>::new(tx));
+/// // start flowgraph
 /// ```
-pub struct CrossbeamSink<T: Send + Copy + 'static> {
+pub struct AsyncChannelSink<T: Send + 'static> {
     sender: Sender<Box<[T]>>,
 }
 
-impl<T: Send + Copy + 'static> CrossbeamSink<T> {
+impl<T: Send + Clone + 'static> AsyncChannelSink<T> {
     #[allow(clippy::new_ret_no_self)]
     pub fn new(sender: Sender<Box<[T]>>) -> Block {
-        Block::from_typed(Self::new_typed(sender))
-    }
-
-    pub fn new_typed(sender: Sender<Box<[T]>>) -> TypedBlock<Self> {
-        TypedBlock::new(
-            BlockMetaBuilder::new("CrossbeamSink").build(),
+        Block::new(
+            BlockMetaBuilder::new("AsyncChannelSink").build(),
             StreamIoBuilder::new().add_input::<T>("in").build(),
-            MessageIoBuilder::<Self>::new().build(),
-            CrossbeamSink::<T> { sender },
+            MessageIoBuilder::new().build(),
+            AsyncChannelSink::<T> { sender },
         )
     }
 }
 
 #[doc(hidden)]
 #[async_trait]
-impl<T: Send + Copy + 'static> Kernel for CrossbeamSink<T> {
+impl<T: Send + Clone + 'static> Kernel for AsyncChannelSink<T> {
     async fn work(
         &mut self,
         io: &mut WorkIo,

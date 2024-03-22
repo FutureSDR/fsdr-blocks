@@ -1,6 +1,6 @@
+use async_trait::async_trait;
 use crossbeam_channel::{Receiver, TryRecvError};
 use futuresdr::anyhow::Result;
-use futuresdr::async_trait::async_trait;
 use futuresdr::log::debug;
 use futuresdr::runtime::BlockMeta;
 use futuresdr::runtime::BlockMetaBuilder;

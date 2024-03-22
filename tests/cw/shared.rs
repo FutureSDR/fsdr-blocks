@@ -64,7 +64,7 @@ fn test_msg_to_cw() -> Result<()> {
 // cargo nextest run test_display_trait_impl --no-capture
 #[test]
 fn test_display_trait_impl() {
-    let testdata = vec![Dash, Dot, LetterSpace, Unknown, Dot, WordSpace, Dash];
+    let testdata = [Dash, Dot, LetterSpace, Unknown, Dot, WordSpace, Dash];
     let str: String = testdata.iter().map(ToString::to_string).collect();
     assert_eq!("-.  <?> ./ -", str)
 }

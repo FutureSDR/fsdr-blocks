@@ -17,7 +17,7 @@ pub fn crossbeam_source_boxed_slice_u32(c: &mut Criterion) {
 
     group.throughput(criterion::Throughput::Elements(n_samp as u64));
 
-    group.bench_function(format!("mock-u32-crossbeam-source"), |b| {
+    group.bench_function("mock-u32-crossbeam-source", |b| {
         b.iter(|| {
             let block = CrossbeamSource::new_typed(rx.clone());
             let mut mocker = Mocker::new(block);

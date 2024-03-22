@@ -9,6 +9,9 @@ pub extern crate async_trait;
 #[cfg(feature = "crossbeam")]
 pub mod channel;
 
+#[cfg(feature = "async-channel")]
+pub mod async_channel;
+
 #[cfg(feature = "cw")]
 pub mod cw;
 
