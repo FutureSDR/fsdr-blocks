@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use crossbeam_channel::Sender;
 use futuresdr::anyhow::Result;
-use futuresdr::log::info;
+// use futuresdr::log::info;
 use futuresdr::runtime::BlockMeta;
 use futuresdr::runtime::BlockMetaBuilder;
 use futuresdr::runtime::Kernel;
@@ -72,10 +72,10 @@ impl<T: Send + Copy + 'static> Kernel for CrossbeamSink<T> {
         if !i.is_empty() {
             match self.sender.try_send(i.into()) {
                 Ok(_) => {
-                    info!("sent data...");
+                    //info!("sent data...");
                 }
-                Err(err) => {
-                    info!("{}", err.to_string());
+                Err(_err) => {
+                    //info!("{}", err.to_string());
                 }
             }
             sio.input(0).consume(i.len());

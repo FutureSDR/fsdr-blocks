@@ -15,6 +15,7 @@ pub mod async_channel;
 #[cfg(feature = "cw")]
 pub mod cw;
 
+pub mod agc;
 pub mod math;
 pub mod sigmf;
 pub mod stdinout;

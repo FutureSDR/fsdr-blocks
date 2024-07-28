@@ -2,7 +2,7 @@ use async_channel::Receiver;
 use futuresdr::futures::StreamExt;
 
 use futuresdr::anyhow::Result;
-use futuresdr::log::info;
+// use futuresdr::log::info;
 use futuresdr::runtime::Block;
 use futuresdr::runtime::BlockMeta;
 use futuresdr::runtime::BlockMetaBuilder;
@@ -71,11 +71,11 @@ impl<T: Send + 'static> Kernel for AsyncChannelSource<T> {
             match self.receiver.by_ref().recv().await {
                 //.by_ref().next().await
                 Ok(data) => {
-                    info!("received data chunk on channel");
+                    // info!("received data chunk on channel");
                     self.current = Some((data, 0));
                 }
                 Err(_err) => {
-                    info!("sender-end of channel was closed");
+                    // info!("sender-end of channel was closed");
                     io.finished = true;
                     return Ok(());
                 }

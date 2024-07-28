@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use crossbeam_channel::{Receiver, TryRecvError};
 use futuresdr::anyhow::Result;
-use futuresdr::log::debug;
+// use futuresdr::log::debug;
 use futuresdr::runtime::BlockMeta;
 use futuresdr::runtime::BlockMetaBuilder;
 use futuresdr::runtime::Kernel;
@@ -96,14 +96,14 @@ impl<T: Send + 'static> Kernel for CrossbeamSource<T> {
             match self.receiver.try_recv() {
                 //.by_ref().next().await {
                 Ok(data) => {
-                    debug!("received data chunk on channel");
+                    // debug!("received data chunk on channel");
                     self.current = Some((data, 0));
                 }
                 Err(TryRecvError::Empty) => {
                     //debug!("channel empty");
                 }
                 Err(TryRecvError::Disconnected) => {
-                    debug!("sender-end of channel was closed");
+                    // debug!("sender-end of channel was closed");
                     io.finished = true;
                     return Ok(());
                 }

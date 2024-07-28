@@ -72,16 +72,8 @@ where
     pub fn new(reader: R, desc: Description, converter: F) -> Result<Block> {
         let global = desc.global()?;
         let datatype = *global.datatype()?;
-        let annotations = if let Some(annot) = desc.annotations {
-            annot
-        } else {
-            vec![]
-        };
-        // let captures = if let Some(capts) = desc.captures {
-        //     capts
-        // } else {
-        //     vec![]
-        // };
+        let annotations = desc.annotations.unwrap_or_default();
+        // let captures = desc.captures.unwrap_or_default();
         Ok(Block::new(
             BlockMetaBuilder::new("SigMFFileSource").build(),
             StreamIoBuilder::new().add_output::<T>("out").build(),
