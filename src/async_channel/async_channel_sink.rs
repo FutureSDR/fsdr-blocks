@@ -1,7 +1,7 @@
 use async_channel::Sender;
 
 use futuresdr::anyhow::Result;
-use futuresdr::log::info;
+// use futuresdr::log::info;
 use futuresdr::runtime::Block;
 use futuresdr::runtime::BlockMeta;
 use futuresdr::runtime::BlockMetaBuilder;
@@ -63,10 +63,10 @@ impl<T: Send + Clone + 'static> Kernel for AsyncChannelSink<T> {
         if !i.is_empty() {
             match self.sender.try_send(i.into()) {
                 Ok(_) => {
-                    info!("sent data...");
+                    // info!("sent data...");
                 }
-                Err(err) => {
-                    info!("{}", err.to_string());
+                Err(_err) => {
+                    // info!("{}", err.to_string());
                 }
             }
             sio.input(0).consume(i.len());

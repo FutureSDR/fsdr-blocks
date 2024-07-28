@@ -1,7 +1,7 @@
 use fsdr_blocks::channel::CrossbeamSource;
 use futuresdr::anyhow::Result;
 use futuresdr::blocks::{Head, VectorSink, VectorSinkBuilder};
-use futuresdr::log::debug;
+// use futuresdr::log::debug;
 use futuresdr::macros::connect;
 use futuresdr::runtime::{Flowgraph, Runtime};
 
@@ -26,13 +26,13 @@ fn crossbeam_source_u32() -> Result<()> {
     let snk = fg.kernel::<VectorSink<u32>>(vector_sink).unwrap();
     let received = snk.items();
 
-    debug!("{}", received.len());
-    debug!("{}", orig.len());
+    // debug!("{}", received.len());
+    // debug!("{}", orig.len());
 
     assert_eq!(received.len(), orig.len());
 
     for (v, e) in orig.iter().zip(received.iter()) {
-        debug!("{v} == {e}");
+        // debug!("{v} == {e}");
         assert_eq!(v, e);
     }
     Ok(())

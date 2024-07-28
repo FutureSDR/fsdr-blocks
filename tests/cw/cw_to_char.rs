@@ -60,19 +60,19 @@ fn test_cw_to_char_channel() -> Result<()> {
     let fg = block_on(async move {
         let (fg, _) = rt.start(fg).await;
         let c = msg_to_cw(['S'].as_slice()).into_boxed_slice();
-        tx.send(c).await?;
+        tx.send(c).await.unwrap();
         let c = msg_to_cw([' '].as_slice()).into_boxed_slice();
-        tx.send(c).await?;
+        tx.send(c).await.unwrap();
         let c = msg_to_cw(['O'].as_slice()).into_boxed_slice();
-        tx.send(c).await?;
+        tx.send(c).await.unwrap();
         let c = msg_to_cw(['_'].as_slice()).into_boxed_slice();
-        tx.send(c).await?;
+        tx.send(c).await.unwrap();
         let c = msg_to_cw(['_', 'S'].as_slice()).into_boxed_slice();
-        tx.send(c).await?;
+        tx.send(c).await.unwrap();
         let c = msg_to_cw(['S'].as_slice()).into_boxed_slice();
-        tx.send(c).await?;
-        tx.close().await?;
-        fg.await as Result<Flowgraph>
+        tx.send(c).await.unwrap();
+        tx.close().await.unwrap();
+        fg.await // as Result<Flowgraph>
     })?;
 
     let snk = fg.kernel::<VectorSink<char>>(vector_snk).unwrap();
