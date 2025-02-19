@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: cargo-crate-publish
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@nightly
       - name: Login to crates.io
         uses: actions-rs/cargo@v1
@@ -25,6 +25,7 @@ jobs:
           toolchain: nightly
           command: login
           args: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+      - run: sudo apt-get -y update
       - run: sudo apt-get install -y libzmq3-dev
       - run: sudo apt-get -y install libasound2-dev
       - run: sudo apt-get -y install liblttng-ust-dev
