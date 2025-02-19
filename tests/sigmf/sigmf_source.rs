@@ -1,6 +1,5 @@
 use fsdr_blocks::sigmf::BytesConveter;
 use fsdr_blocks::sigmf::SigMFSourceBuilder;
-use futuresdr::anyhow::Result;
 use futuresdr::blocks::VectorSink;
 use futuresdr::blocks::VectorSinkBuilder;
 use futuresdr::futures::io::BufReader;
@@ -8,6 +7,7 @@ use futuresdr::futures::io::Cursor;
 use futuresdr::macros::connect;
 use futuresdr::num_complex::Complex;
 use futuresdr::runtime::Flowgraph;
+use futuresdr::runtime::Result;
 use futuresdr::runtime::Runtime;
 use sigmf::DatasetFormat;
 use sigmf::DescriptionBuilder;

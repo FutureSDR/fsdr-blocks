@@ -100,13 +100,13 @@ where
     B: Copy + Send + From<A> + 'static,
 {
     pub fn build(self) -> Block {
-        Apply::new(|i: &A| -> B { (*i).into() })
+        Apply::new(|i: &A| -> B { (*i).into() }).into()
     }
 }
 
 impl ScaledConverterBuilder<u8, f32> {
     pub fn build(self) -> Block {
-        Apply::new(|i: &u8| -> f32 { ScaledConverterBuilder::<u8, f32>::convert(i) })
+        Apply::new(|i: &u8| -> f32 { ScaledConverterBuilder::<u8, f32>::convert(i) }).into()
     }
 
     pub fn convert(i: &u8) -> f32 {
@@ -116,7 +116,7 @@ impl ScaledConverterBuilder<u8, f32> {
 
 impl ScaledConverterBuilder<u16, f32> {
     pub fn build(self) -> Block {
-        Apply::new(|i: &u16| -> f32 { ScaledConverterBuilder::<u16, f32>::convert(i) })
+        Apply::new(|i: &u16| -> f32 { ScaledConverterBuilder::<u16, f32>::convert(i) }).into()
     }
 
     pub fn convert(i: &u16) -> f32 {
@@ -126,7 +126,7 @@ impl ScaledConverterBuilder<u16, f32> {
 
 impl ScaledConverterBuilder<u32, f32> {
     pub fn build(self) -> Block {
-        Apply::new(|i: &u32| -> f32 { ScaledConverterBuilder::<u32, f32>::convert(i) })
+        Apply::new(|i: &u32| -> f32 { ScaledConverterBuilder::<u32, f32>::convert(i) }).into()
     }
 
     pub fn convert(i: &u32) -> f32 {
@@ -136,7 +136,7 @@ impl ScaledConverterBuilder<u32, f32> {
 
 impl ScaledConverterBuilder<i8, f32> {
     pub fn build(self) -> Block {
-        Apply::new(|i: &i8| -> f32 { ScaledConverterBuilder::<i8, f32>::convert(i) })
+        Apply::new(|i: &i8| -> f32 { ScaledConverterBuilder::<i8, f32>::convert(i) }).into()
     }
 
     pub fn convert(i: &i8) -> f32 {
@@ -146,7 +146,7 @@ impl ScaledConverterBuilder<i8, f32> {
 
 impl ScaledConverterBuilder<i16, f32> {
     pub fn build(self) -> Block {
-        Apply::new(|i: &i16| -> f32 { ScaledConverterBuilder::<i16, f32>::convert(i) })
+        Apply::new(|i: &i16| -> f32 { ScaledConverterBuilder::<i16, f32>::convert(i) }).into()
     }
 
     pub fn convert(i: &i16) -> f32 {
@@ -156,7 +156,7 @@ impl ScaledConverterBuilder<i16, f32> {
 
 impl ScaledConverterBuilder<i32, f32> {
     pub fn build(self) -> Block {
-        Apply::new(|i: &i32| -> f32 { ScaledConverterBuilder::<i32, f32>::convert(i) })
+        Apply::new(|i: &i32| -> f32 { ScaledConverterBuilder::<i32, f32>::convert(i) }).into()
     }
 
     pub fn convert(i: &i32) -> f32 {
@@ -166,7 +166,7 @@ impl ScaledConverterBuilder<i32, f32> {
 
 impl ScaledConverterBuilder<f32, u8> {
     pub fn build(self) -> Block {
-        Apply::new(|i: &f32| -> u8 { ScaledConverterBuilder::<f32, u8>::convert(i) })
+        Apply::new(|i: &f32| -> u8 { ScaledConverterBuilder::<f32, u8>::convert(i) }).into()
     }
 
     pub fn convert(i: &f32) -> u8 {
@@ -176,7 +176,7 @@ impl ScaledConverterBuilder<f32, u8> {
 
 impl ScaledConverterBuilder<f32, i8> {
     pub fn build(self) -> Block {
-        Apply::new(|i: &f32| -> i8 { ScaledConverterBuilder::<f32, i8>::convert(i) })
+        Apply::new(|i: &f32| -> i8 { ScaledConverterBuilder::<f32, i8>::convert(i) }).into()
     }
 
     pub fn convert(i: &f32) -> i8 {
@@ -186,7 +186,7 @@ impl ScaledConverterBuilder<f32, i8> {
 
 impl ScaledConverterBuilder<f32, i16> {
     pub fn build(self) -> Block {
-        Apply::new(|i: &f32| -> i16 { ScaledConverterBuilder::<f32, i16>::convert(i) })
+        Apply::new(|i: &f32| -> i16 { ScaledConverterBuilder::<f32, i16>::convert(i) }).into()
     }
 
     pub fn convert(i: &f32) -> i16 {

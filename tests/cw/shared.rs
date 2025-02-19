@@ -1,6 +1,6 @@
 use fsdr_blocks::cw::shared::CWAlphabet::*;
 use fsdr_blocks::cw::shared::{char_to_baseband, msg_to_cw};
-use futuresdr::anyhow::Result;
+use futuresdr::runtime::Result;
 
 // cargo nextest run test_char_to_baseband --no-capture
 #[test]

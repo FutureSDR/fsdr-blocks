@@ -1,11 +1,11 @@
 use fsdr_blocks::math::FrequencyShifter;
-use futuresdr::anyhow::Result;
 use futuresdr::blocks::VectorSink;
 use futuresdr::blocks::VectorSinkBuilder;
 use futuresdr::blocks::VectorSource;
 use futuresdr::macros::connect;
 use futuresdr::num_complex::Complex32;
 use futuresdr::runtime::Flowgraph;
+use futuresdr::runtime::Result;
 use futuresdr::runtime::Runtime;
 
 #[test]

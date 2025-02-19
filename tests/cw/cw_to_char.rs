@@ -1,10 +1,10 @@
 use fsdr_blocks::cw::cw_to_char::CWToCharBuilder;
 use fsdr_blocks::cw::shared::{msg_to_cw, CWAlphabet};
-use futuresdr::anyhow::Result;
 use futuresdr::async_io::block_on;
 use futuresdr::blocks::{ChannelSource, VectorSink, VectorSinkBuilder, VectorSource};
 use futuresdr::futures::SinkExt;
 use futuresdr::macros::connect;
+use futuresdr::runtime::Result;
 use futuresdr::runtime::{Flowgraph, Runtime};
 
 // cargo test --features="cw"

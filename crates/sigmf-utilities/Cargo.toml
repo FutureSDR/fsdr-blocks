@@ -12,17 +12,16 @@ readme = "README.md"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+anyhow = "1.0"
+clap = { version = "4.4.7", features = ["derive"] }
+fsdr-blocks = {path="../../"}
+futuresdr = { git = "https://github.com/FutureSDR/FutureSDR", branch = "main" }
 serde = "^1.0"
 serde_derive = "^1.0"
 serde_json = "^1.0"
-thiserror = "1.0.50"
-clap = { version = "4.4.7", features = ["derive"] }
-anyhow = { version = "1.0.75"}
 sigmf = {path="../sigmf"}
+thiserror = "1.0.50"
 walkdir = "2.4.0"
-fsdr-blocks = {path="../../"}
-futuresdr = { git = "https://github.com/FutureSDR/FutureSDR", branch = "main" }
-#futuresdr = {path="../../../FutureSDR"}
 
 [build-dependencies]
 rustc_version = "0.4.0"

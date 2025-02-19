@@ -1,3 +1,4 @@
+use anyhow::anyhow;
 use clap::{arg, Parser};
 use fsdr_blocks::sigmf::DatasetFormat;
 use fsdr_blocks::sigmf::DatasetFormat::*;
@@ -7,8 +8,8 @@ use fsdr_blocks::{
 };
 use futuresdr::blocks::TagDebug;
 use futuresdr::macros::connect;
+use futuresdr::runtime::Result;
 use futuresdr::{
-    anyhow::{anyhow, Result},
     blocks::Apply,
     runtime::{Flowgraph, Runtime},
 };

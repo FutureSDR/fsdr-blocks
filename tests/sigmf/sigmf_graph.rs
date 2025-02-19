@@ -2,9 +2,9 @@ use futuresdr::blocks::VectorSink;
 
 use fsdr_blocks::sigmf::{BytesConveter, SigMFSink, SigMFSourceBuilder};
 use futuresdr::{
-    anyhow::Result,
     blocks::{VectorSinkBuilder, VectorSource},
     macros::connect,
+    runtime::Result,
     runtime::{Flowgraph, Runtime},
 };
 

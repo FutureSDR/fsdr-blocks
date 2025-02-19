@@ -1,8 +1,7 @@
 use fsdr_blocks::async_channel::AsyncChannelSource;
-use futuresdr::anyhow::Result;
 use futuresdr::blocks::{Head, VectorSink, VectorSinkBuilder};
-// use futuresdr::log::debug;
 use futuresdr::macros::connect;
+use futuresdr::runtime::Result;
 use futuresdr::runtime::{Flowgraph, Runtime};
 
 #[test]

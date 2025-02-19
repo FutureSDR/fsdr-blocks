@@ -1,9 +1,9 @@
 use fsdr_blocks::cw::baseband_to_cw::BaseBandToCWBuilder;
 use fsdr_blocks::cw::shared::CWAlphabet::*;
 use fsdr_blocks::cw::shared::{char_to_baseband, CWAlphabet};
-use futuresdr::anyhow::Result;
 use futuresdr::blocks::{VectorSink, VectorSinkBuilder, VectorSource};
 use futuresdr::macros::connect;
+use futuresdr::runtime::Result;
 use futuresdr::runtime::{Flowgraph, Runtime};
 
 // cargo nextest run test_baseband_to_cw --no-capture

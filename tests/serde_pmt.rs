@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
-use futuresdr::anyhow::Result;
 use futuresdr::runtime::Pmt;
+use futuresdr::runtime::Result;
 
 use fsdr_blocks::serde_pmt::{from_pmt, to_pmt};
 
