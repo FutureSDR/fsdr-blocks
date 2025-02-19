@@ -2,17 +2,14 @@ use anyhow::anyhow;
 use clap::{arg, Parser};
 use fsdr_blocks::sigmf::DatasetFormat;
 use fsdr_blocks::sigmf::DatasetFormat::*;
-use fsdr_blocks::{
-    sigmf::{SigMFSinkBuilder, SigMFSourceBuilder},
-    type_converters::TypeConvertersBuilder,
-};
+use fsdr_blocks::sigmf::{SigMFSinkBuilder, SigMFSourceBuilder};
+use fsdr_blocks::type_converters::TypeConvertersBuilder;
+use futuresdr::blocks::Apply;
 use futuresdr::blocks::TagDebug;
 use futuresdr::macros::connect;
+use futuresdr::runtime::Flowgraph;
 use futuresdr::runtime::Result;
-use futuresdr::{
-    blocks::Apply,
-    runtime::{Flowgraph, Runtime},
-};
+use futuresdr::runtime::Runtime;
 use std::path::PathBuf;
 
 #[derive(Parser)]
@@ -32,30 +29,29 @@ impl Cli {
 
         let mut src = SigMFSourceBuilder::from(&self.input);
         let src = src.build::<f32>().await?;
-        let src = fg.add_block(src);
 
         let snk = SigMFSinkBuilder::from(self.output);
 
         let (conv, snk) = match self.target {
             RI8 => (
-                fg.add_block(TypeConvertersBuilder::lossy_scale_convert_f32_i8().build()),
-                fg.add_block(snk.datatype(self.target).build::<i8>().await?),
+                TypeConvertersBuilder::lossy_scale_convert_f32_i8().build(),
+                snk.datatype(self.target).build::<i8>().await?,
             ),
             RU8 => (
-                fg.add_block(TypeConvertersBuilder::lossy_scale_convert_f32_u8().build()),
-                fg.add_block(snk.datatype(self.target).build::<u8>().await?),
+                TypeConvertersBuilder::lossy_scale_convert_f32_u8().build(),
+                snk.datatype(self.target).build::<u8>().await?,
             ),
             Rf32Be | Rf32Le => (
-                fg.add_block(Apply::new(|x: &f32| *x)),
-                fg.add_block(snk.datatype(self.target).build::<f32>().await?),
+                Apply::new(|x: &f32| *x).into(),
+                snk.datatype(self.target).build::<f32>().await?,
             ),
             Rf64Be | Rf64Le => (
-                fg.add_block(TypeConvertersBuilder::convert::<f32, f64>().build()),
-                fg.add_block(snk.datatype(self.target).build::<f64>().await?),
+                TypeConvertersBuilder::convert::<f32, f64>().build(),
+                snk.datatype(self.target).build::<f64>().await?,
             ),
             Ri16Be | Ri16Le => (
-                fg.add_block(TypeConvertersBuilder::lossy_scale_convert_f32_i16().build()),
-                fg.add_block(snk.datatype(self.target).build::<i16>().await?),
+                TypeConvertersBuilder::lossy_scale_convert_f32_i16().build(),
+                snk.datatype(self.target).build::<i16>().await?,
             ),
             // Ri32Be | Ri32Le  => (
             //     fg.add_block(TypeConvertersBuilder::lossy_scale_convert_f32_i32().build()),
@@ -76,7 +72,6 @@ impl Cli {
         //     .with_context(|| "conv->snk")?;
 
         let tag_dbg = TagDebug::<f32>::new("debugger");
-        let tag_dbg = fg.add_block(tag_dbg);
         // fg.connect_stream(src, "out", tag_dbg, "in")?;
         connect!(fg, src > tag_dbg);
 

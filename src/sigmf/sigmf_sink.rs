@@ -84,12 +84,7 @@ where
 
 pub fn convert_pmt_to_annotation(value: &Pmt) -> Option<Annotation> {
     let annot: crate::serde_pmt::error::Result<Annotation> = from_pmt(value.clone());
-    if let Ok(annot) = annot {
-        //TODO check if at least one field has been deserialized
-        Some(annot)
-    } else {
-        None
-    }
+    annot.ok()
     // match value {
     //     Pmt::MapStrPmt(dict) => {
     //         let mut annot = Annotation::default();

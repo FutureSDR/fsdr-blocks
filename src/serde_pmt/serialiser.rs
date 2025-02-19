@@ -13,7 +13,7 @@ use super::{
 
 pub struct Serializer {}
 
-impl<'a> serde::Serializer for &'a mut Serializer {
+impl serde::Serializer for &mut Serializer {
     type Ok = Pmt;
 
     type Error = Error;
