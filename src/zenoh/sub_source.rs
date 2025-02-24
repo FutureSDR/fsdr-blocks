@@ -14,7 +14,9 @@ pub struct SubSource<T: Send + 'static> {
     config: zenoh::Config,
     key_expression: String,
     session: Option<zenoh::Session>,
-    subscriber: Option<zenoh::pubsub::Subscriber<zenoh::handlers::FifoChannelHandler<zenoh::sample::Sample>>>,
+    subscriber: Option<
+        zenoh::pubsub::Subscriber<zenoh::handlers::FifoChannelHandler<zenoh::sample::Sample>>,
+    >,
     _type: std::marker::PhantomData<T>,
 }
 
@@ -68,7 +70,10 @@ impl<T: Send + 'static> Kernel for SubSource<T> {
         _meta: &mut BlockMeta,
     ) -> Result<()> {
         let session = zenoh::open(self.config.clone()).await.unwrap();
-        let subscriber = session.declare_subscriber(self.key_expression.clone()).await.unwrap();
+        let subscriber = session
+            .declare_subscriber(self.key_expression.clone())
+            .await
+            .unwrap();
 
         self.session = Some(session);
         self.subscriber = Some(subscriber);

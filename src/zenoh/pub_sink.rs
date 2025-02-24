@@ -21,7 +21,11 @@ pub struct PubSink<T: Send + 'static> {
 
 impl<T: Send + 'static> PubSink<T> {
     /// Create PubSink
-    pub fn new(config: zenoh::Config, key_expression: impl Into<String>, min_item: usize) -> TypedBlock<Self> {
+    pub fn new(
+        config: zenoh::Config,
+        key_expression: impl Into<String>,
+        min_item: usize,
+    ) -> TypedBlock<Self> {
         TypedBlock::new(
             BlockMetaBuilder::new("PubSink").blocking().build(),
             StreamIoBuilder::new().add_input::<T>("in").build(),
@@ -74,7 +78,10 @@ impl<T: Send + 'static> Kernel for PubSink<T> {
         _meta: &mut BlockMeta,
     ) -> Result<()> {
         let session = zenoh::open(self.config.clone()).await.unwrap();
-        let publisher = session.declare_publisher(self.key_expression.clone()).await.unwrap();
+        let publisher = session
+            .declare_publisher(self.key_expression.clone())
+            .await
+            .unwrap();
 
         self.session = Some(session);
         self.publisher = Some(publisher);
