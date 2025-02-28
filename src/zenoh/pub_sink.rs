@@ -52,16 +52,17 @@ impl<T: Send + 'static> Kernel for PubSink<T> {
         _message_io: &mut MessageIo<Self>,
         _meta: &mut BlockMeta,
     ) -> Result<()> {
-        let input = stream_io.input(0).slice::<T>();
+        let input = stream_io.input(0).slice_unchecked::<u8>();
 
-        let input_len = input.len();
+        let item_size = std::mem::size_of::<T>();
+        let item_count = input.len() / item_size;
 
-        if input_len > 0 && input_len > self.min_item {
-            let input = stream_io.input(0).slice_unchecked::<u8>();
+        if item_count > 0 && item_count > self.min_item {
+            let input = &input[..item_count * item_size];
 
             self.publisher.as_mut().unwrap().put(input).await.unwrap();
 
-            stream_io.input(0).consume(input_len);
+            stream_io.input(0).consume(item_count);
         }
 
         if stream_io.input(0).finished() {
