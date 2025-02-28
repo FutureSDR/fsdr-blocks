@@ -29,6 +29,7 @@ bimap = { version = "0.6.3", optional = true }
 sigmf = { version = "0.1.0", path = "crates/sigmf" }
 async-fs = "2.1.2"
 serde = "1.0.204"
+zenoh = { version = "1.2.1", optional = true }
 
 [dev-dependencies]
 criterion = { version = "0.5.1", features = ["html_reports"] }
@@ -42,6 +43,7 @@ default = []
 crossbeam = ["dep:crossbeam-channel"]
 async-channel = ["dep:async-channel"]
 cw = ["dep:bimap"]
+zenoh = ["dep:zenoh"]
 
 [[bench]]
 name = "crossbeam_sink"

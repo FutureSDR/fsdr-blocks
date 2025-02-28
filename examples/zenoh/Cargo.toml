@@ -1,0 +1,19 @@
+[package]
+name = "zenoh"
+version = "0.1.0"
+edition = "2021"
+
+[workspace]
+
+[dependencies]
+anyhow = "1.0"
+fsdr-blocks = { path = "../..", features = ["zenoh"] }
+futuresdr = { git = "https://github.com/FutureSDR/FutureSDR", branch = "main", version = "0.0.37"}
+
+[[bin]]
+name = "zenoh-receiver"
+path = "zenoh_receiver.rs"
+
+[[bin]]
+name = "zenoh-sender"
+path = "zenoh_sender.rs"
