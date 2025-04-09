@@ -14,7 +14,7 @@ A community-made library of blocks for FutureSDR. FutureSDR is An experimental a
 [actions-url]: https://github.com/futuresdr/fsdr-blocks/actions?query=workflow%3ACI+branch%3Amaster
 
 [Website](https://www.futuresdr.org) |
-[Guides](https://www.futuresdr.org/tutorial) |
+[Guides](https://www.futuresdr.org/learn) |
 [API Docs](https://docs.rs/futuresdr/latest/fsdr-blocks) |
 [Chat](https://discord.com/invite/vCz29eDbGP/)
 
