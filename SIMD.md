@@ -29,3 +29,13 @@ To maintain compatibility and maximize performance, we use the following pattern
 - **Status:** Done.
 - **Impact:** ~6% gain on `f32` (memory-bound).
 - **Pattern:** `DeinterleaveSupported` trait with macro-based SIMD implementations.
+
+### 2. TypeConverter (`src/type_converters.rs`)
+- **Status:** Done.
+- **Impact:** ~305% gain (3.05x speedup) on `u8` -> `f32` scaled conversion.
+- **Pattern:** `TypeConvertSupported` trait with specialized SIMD path for `u8` -> `f32`.
+
+### 3. FreqShift (`src/math/freq_shift.rs`)
+- **Status:** Done.
+- **Impact:** ~4.4x speedup on `Complex32` rotation compared to naive scalar loop.
+- **Pattern:** `FreqShiftSupported` trait with SIMD complex multiplication and periodic NCO re-sync for precision.

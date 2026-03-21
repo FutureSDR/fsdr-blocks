@@ -81,3 +81,8 @@ harness = false
 name = "type_converters"
 path = "benches/type_converters.rs"
 harness = false
+
+[[bench]]
+name = "freq_shift"
+path = "benches/math/freq_shift.rs"
+harness = false
