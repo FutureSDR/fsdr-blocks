@@ -1,5 +1,5 @@
 #![cfg_attr(feature = "simd", feature(portable_simd))]
-#![cfg_attr(feature = "simd", feature(specialization))]
+#![cfg_attr(feature = "simd", feature(min_specialization))]
 //! This library acts as a toolbox on top of [`futuresdr`] to easily build your own flowgraph.
 //! It is made by the community for the community.
 
