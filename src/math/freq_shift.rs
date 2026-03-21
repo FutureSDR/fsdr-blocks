@@ -3,6 +3,9 @@ use futuresdr::blocks::signal_source::NCO;
 use futuresdr::num_complex::Complex32;
 use futuresdr::prelude::*;
 
+#[cfg(feature = "simd")]
+use core::simd::prelude::*;
+
 /// This blocks shift the signal in the frequency domain based on the [`NCO`] implementation.
 /// Currently implemented only for float and [`Complex32`]
 ///
@@ -48,50 +51,113 @@ where
     }
 }
 
-#[doc(hidden)]
-impl<I, O> Kernel for FrequencyShifter<f32, I, O>
-where
-    I: CpuBufferReader<Item = f32>,
-    O: CpuBufferWriter<Item = f32>,
-{
-    async fn work(
-        &mut self,
-        io: &mut WorkIo,
-        _mio: &mut MessageOutputs,
-        _meta: &mut BlockMeta,
-    ) -> Result<()> {
-        let m = {
-            let i = self.input.slice();
-            let o = self.output.slice();
+pub trait FreqShiftSupported: Copy {
+    fn freq_shift(nco: &mut NCO, phase_inc: FixedPointPhase, input: &[Self], output: &mut [Self]);
+}
 
-            let m = std::cmp::min(i.len(), o.len());
-            if m > 0 {
-                for (v, r) in i[..m].iter().zip(o[..m].iter_mut()) {
-                    *r = (*v) * self.nco.phase.cos();
-                    self.nco.step();
+impl FreqShiftSupported for f32 {
+    fn freq_shift(nco: &mut NCO, _phase_inc: FixedPointPhase, input: &[Self], output: &mut [Self]) {
+        let n = input.len().min(output.len());
+        for (v, r) in input[..n].iter().zip(output[..n].iter_mut()) {
+            *r = (*v) * nco.phase.cos();
+            nco.step();
+        }
+    }
+}
+
+impl FreqShiftSupported for Complex32 {
+    fn freq_shift(nco: &mut NCO, phase_inc: FixedPointPhase, input: &[Self], output: &mut [Self]) {
+        let n = input.len().min(output.len());
+        if n == 0 {
+            return;
+        }
+
+        #[cfg(feature = "simd")]
+        {
+            const LANES: usize = 8;
+            let n_simd = n / LANES;
+
+            if n_simd > 0 {
+                let block_rotation_angle = f32::from(&phase_inc) * LANES as f32;
+                let v_br_re = f32x8::splat(block_rotation_angle.cos());
+                let v_br_im = f32x8::splat(block_rotation_angle.sin());
+
+                let mut block_phasor_cos = f32x8::splat(0.0);
+                let mut block_phasor_sin = f32x8::splat(0.0);
+
+                let i_f32 =
+                    unsafe { core::slice::from_raw_parts(input.as_ptr() as *const f32, n * 2) };
+                let o_f32 = unsafe {
+                    core::slice::from_raw_parts_mut(output.as_mut_ptr() as *mut f32, n * 2)
+                };
+
+                for i in 0..n_simd {
+                    if i % 128 == 0 {
+                        let mut temp_nco = *nco;
+                        let mut cos_arr = [0.0f32; LANES];
+                        let mut sin_arr = [0.0f32; LANES];
+                        for j in 0..LANES {
+                            cos_arr[j] = temp_nco.phase.cos();
+                            sin_arr[j] = temp_nco.phase.sin();
+                            temp_nco.step();
+                        }
+                        block_phasor_cos = f32x8::from_array(cos_arr);
+                        block_phasor_sin = f32x8::from_array(sin_arr);
+                    }
+
+                    let v0 = f32x8::from_slice(&i_f32[i * LANES * 2..i * LANES * 2 + 8]);
+                    let v1 = f32x8::from_slice(&i_f32[i * LANES * 2 + 8..i * LANES * 2 + 16]);
+                    let (v_re, v_im) = v0.deinterleave(v1);
+
+                    let res_re = v_re * block_phasor_cos - v_im * block_phasor_sin;
+                    let res_im = v_re * block_phasor_sin + v_im * block_phasor_cos;
+
+                    let (o0, o1) = res_re.interleave(res_im);
+                    o0.copy_to_slice(&mut o_f32[i * LANES * 2..i * LANES * 2 + 8]);
+                    o1.copy_to_slice(&mut o_f32[i * LANES * 2 + 8..i * LANES * 2 + 16]);
+
+                    let next_cos = block_phasor_cos * v_br_re - block_phasor_sin * v_br_im;
+                    let next_sin = block_phasor_cos * v_br_im + block_phasor_sin * v_br_re;
+                    block_phasor_cos = next_cos;
+                    block_phasor_sin = next_sin;
+                    nco.steps(LANES as i32);
                 }
             }
-            m
-        };
 
-        if m > 0 {
-            self.input.consume(m);
-            self.output.produce(m);
+            let tail_start = n_simd * LANES;
+            if tail_start < n {
+                let rotation = Complex32::new(phase_inc.cos(), phase_inc.sin());
+                let mut current_phasor = Complex32::new(nco.phase.cos(), nco.phase.sin());
+                for (v, r) in input[tail_start..n]
+                    .iter()
+                    .zip(output[tail_start..n].iter_mut())
+                {
+                    *r = (*v) * current_phasor;
+                    current_phasor *= rotation;
+                }
+                nco.steps((n - tail_start) as i32);
+            }
         }
 
-        if self.input.finished() && self.input.slice().is_empty() {
-            io.finished = true;
+        #[cfg(not(feature = "simd"))]
+        {
+            let rotation = Complex32::new(phase_inc.cos(), phase_inc.sin());
+            let mut current_phasor = Complex32::new(nco.phase.cos(), nco.phase.sin());
+            for (v, r) in input[..n].iter().zip(output[..n].iter_mut()) {
+                *r = (*v) * current_phasor;
+                current_phasor *= rotation;
+            }
+            nco.steps(n as i32);
         }
-
-        Ok(())
     }
 }
 
 #[doc(hidden)]
-impl<I, O> Kernel for FrequencyShifter<Complex32, I, O>
+impl<A, I, O> Kernel for FrequencyShifter<A, I, O>
 where
-    I: CpuBufferReader<Item = Complex32>,
-    O: CpuBufferWriter<Item = Complex32>,
+    A: Send + Sync + Default + Clone + std::fmt::Debug + 'static + Copy + FreqShiftSupported,
+    I: CpuBufferReader<Item = A>,
+    O: CpuBufferWriter<Item = A>,
 {
     async fn work(
         &mut self,
@@ -105,13 +171,7 @@ where
 
             let m = std::cmp::min(i.len(), o.len());
             if m > 0 {
-                let rotation = Complex32::new(self.phase_inc.cos(), self.phase_inc.sin());
-                let mut current_phasor = Complex32::new(self.nco.phase.cos(), self.nco.phase.sin());
-                for (v, r) in i[..m].iter().zip(o[..m].iter_mut()) {
-                    *r = (*v) * current_phasor;
-                    current_phasor *= rotation;
-                }
-                self.nco.steps(m as i32);
+                A::freq_shift(&mut self.nco, self.phase_inc, &i[..m], &mut o[..m]);
             }
             m
         };

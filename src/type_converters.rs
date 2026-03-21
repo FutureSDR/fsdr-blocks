@@ -18,19 +18,11 @@
 //! # use fsdr_blocks::type_converters::TypeConvertersBuilder;
 //! let blk = TypeConvertersBuilder::convert::<u8, f32>().build();
 //! ```
-//!
-//! Some other conversions are lossy because there is no natural conversion of all possible inputs.
-//! Conversion of `f32` into `i16` is an example because `16.3` has no direct conversion, yet `16` is a good candidate.
-//! But `f32` can also represent positive or negative infinity, and NaN (not a number) that are not convertible.
-//!
-//! ```
-//! # use fsdr_blocks::type_converters::TypeConvertersBuilder;
-//! let blk = TypeConvertersBuilder::lossy_scale_convert_f32_i16().build();
-//! ```
 
 use core::marker::PhantomData;
-
-use futuresdr::blocks::Apply;
+#[cfg(feature = "simd")]
+use core::simd::prelude::*;
+use futuresdr::prelude::*;
 
 /// Main builder for type conversion blocks
 pub struct TypeConvertersBuilder {}
@@ -38,11 +30,7 @@ pub struct TypeConvertersBuilder {}
 pub struct ConverterBuilder<A, B> {
     marker_input: PhantomData<A>,
     marker_output: PhantomData<B>,
-}
-
-pub struct ScaledConverterBuilder<A, B> {
-    marker_input: PhantomData<A>,
-    marker_output: PhantomData<B>,
+    scaled: bool,
 }
 
 impl TypeConvertersBuilder {
@@ -55,140 +43,327 @@ impl TypeConvertersBuilder {
         ConverterBuilder::<A, B> {
             marker_input: PhantomData,
             marker_output: PhantomData,
+            scaled: false,
         }
     }
 
     /// Full range conversion
     /// for example u8 [0..255] will be converted into f32 as [-1.0..1.0]
-    pub fn scale_convert<A, B>() -> ScaledConverterBuilder<A, B>
-    where
-        A: Copy + Send,
-        B: Copy + Send + From<A>,
-    {
-        ScaledConverterBuilder::<A, B> {
+    pub fn scale_convert<A, B>() -> ConverterBuilder<A, B> {
+        ConverterBuilder::<A, B> {
             marker_input: PhantomData,
             marker_output: PhantomData,
+            scaled: true,
         }
     }
 
-    pub fn lossy_scale_convert_f32_u8() -> ScaledConverterBuilder<f32, u8> {
-        ScaledConverterBuilder::<f32, u8> {
+    pub fn lossy_scale_convert_f32_u8() -> ConverterBuilder<f32, u8> {
+        ConverterBuilder::<f32, u8> {
             marker_input: PhantomData,
             marker_output: PhantomData,
+            scaled: true,
         }
     }
 
-    pub fn lossy_scale_convert_f32_i8() -> ScaledConverterBuilder<f32, i8> {
-        ScaledConverterBuilder::<f32, i8> {
+    pub fn lossy_scale_convert_f32_i8() -> ConverterBuilder<f32, i8> {
+        ConverterBuilder::<f32, i8> {
             marker_input: PhantomData,
             marker_output: PhantomData,
+            scaled: true,
         }
     }
 
-    pub fn lossy_scale_convert_f32_i16() -> ScaledConverterBuilder<f32, i16> {
-        ScaledConverterBuilder::<f32, i16> {
+    pub fn lossy_scale_convert_f32_i16() -> ConverterBuilder<f32, i16> {
+        ConverterBuilder::<f32, i16> {
             marker_input: PhantomData,
             marker_output: PhantomData,
+            scaled: true,
         }
+    }
+}
+
+#[derive(Block)]
+pub struct TypeConverter<
+    A: Send + Sync + Default + Clone + std::fmt::Debug + 'static + Copy,
+    B: Send + Sync + Default + Clone + std::fmt::Debug + 'static + Copy,
+    I: CpuBufferReader<Item = A> = DefaultCpuReader<A>,
+    O: CpuBufferWriter<Item = B> = DefaultCpuWriter<B>,
+> {
+    #[input]
+    input: I,
+    #[output]
+    output: O,
+    scaled: bool,
+}
+
+impl<A, B, I, O> TypeConverter<A, B, I, O>
+where
+    A: Send + Sync + Default + Clone + std::fmt::Debug + 'static + Copy,
+    B: Send + Sync + Default + Clone + std::fmt::Debug + 'static + Copy,
+    I: CpuBufferReader<Item = A>,
+    O: CpuBufferWriter<Item = B>,
+{
+    pub fn new(scaled: bool) -> Self {
+        Self {
+            input: I::default(),
+            output: O::default(),
+            scaled,
+        }
+    }
+}
+
+pub trait TypeConvertSupported<B>: Copy {
+    fn convert_slice(scaled: bool, input: &[Self], output: &mut [B]);
+    fn convert_item(scaled: bool, item: &Self) -> B;
+}
+
+macro_rules! impl_type_convert_plain {
+    ($($a:ty => $b:ty),*) => {
+        $(
+            impl TypeConvertSupported<$b> for $a {
+                fn convert_slice(_scaled: bool, input: &[Self], output: &mut [$b]) {
+                    let n = input.len().min(output.len());
+                    for i in 0..n {
+                        output[i] = <$b>::from(input[i]);
+                    }
+                }
+
+                fn convert_item(_scaled: bool, item: &Self) -> $b {
+                    <$b>::from(*item)
+                }
+            }
+        )*
+    };
+}
+
+impl_type_convert_plain!(
+    u8 => u16, u8 => u32, u8 => u64,
+    u16 => u32, u16 => u64,
+    u32 => u64,
+    i8 => i16, i8 => i32, i8 => i64,
+    i16 => i32, i16 => i64,
+    i32 => i64,
+    f32 => f64,
+    u8 => f64,
+    u16 => f64,
+    u32 => f64,
+    i8 => f64,
+    i16 => f64,
+    i32 => f64
+);
+
+// Special case for f32 which don't have From<u32/i32>
+impl TypeConvertSupported<f32> for u32 {
+    fn convert_slice(scaled: bool, input: &[Self], output: &mut [f32]) {
+        let n = input.len().min(output.len());
+        for i in 0..n {
+            output[i] = Self::convert_item(scaled, &input[i]);
+        }
+    }
+    fn convert_item(scaled: bool, item: &Self) -> f32 {
+        if scaled {
+            (*item as f32) / ((u32::MAX as f32) / 2.0) - 1.0
+        } else {
+            *item as f32
+        }
+    }
+}
+
+impl TypeConvertSupported<f32> for i32 {
+    fn convert_slice(scaled: bool, input: &[Self], output: &mut [f32]) {
+        let n = input.len().min(output.len());
+        for i in 0..n {
+            output[i] = Self::convert_item(scaled, &input[i]);
+        }
+    }
+    fn convert_item(scaled: bool, item: &Self) -> f32 {
+        if scaled {
+            (*item as f32) / ((i32::MAX as f32) / 2.0) - 1.0
+        } else {
+            *item as f32
+        }
+    }
+}
+
+// Types supported by scaled convert to f32
+impl TypeConvertSupported<f32> for u8 {
+    fn convert_slice(scaled: bool, input: &[Self], output: &mut [f32]) {
+        let n = input.len().min(output.len());
+        if scaled {
+            #[cfg(feature = "simd")]
+            {
+                const LANES: usize = 8;
+                let n_simd = n / LANES;
+                let offset = f32x8::splat(1.0);
+                let scale = f32x8::splat(2.0 / 255.0);
+
+                for i in 0..n_simd {
+                    let v = u8x8::from_slice(&input[i * LANES..(i + 1) * LANES]);
+                    let v_f32 = v.cast::<f32>();
+                    let res = v_f32 * scale - offset;
+                    res.copy_to_slice(&mut output[i * LANES..(i + 1) * LANES]);
+                }
+
+                for i in (n_simd * LANES)..n {
+                    output[i] = Self::convert_item(true, &input[i]);
+                }
+            }
+            #[cfg(not(feature = "simd"))]
+            {
+                for i in 0..n {
+                    output[i] = Self::convert_item(true, &input[i]);
+                }
+            }
+        } else {
+            for i in 0..n {
+                output[i] = input[i] as f32;
+            }
+        }
+    }
+    fn convert_item(scaled: bool, item: &Self) -> f32 {
+        if scaled {
+            (*item as f32) * (2.0 / 255.0) - 1.0
+        } else {
+            *item as f32
+        }
+    }
+}
+
+impl TypeConvertSupported<f32> for u16 {
+    fn convert_slice(scaled: bool, input: &[Self], output: &mut [f32]) {
+        let n = input.len().min(output.len());
+        for i in 0..n {
+            output[i] = Self::convert_item(scaled, &input[i]);
+        }
+    }
+    fn convert_item(scaled: bool, item: &Self) -> f32 {
+        if scaled {
+            (*item as f32) / ((u16::MAX as f32) / 2.0) - 1.0
+        } else {
+            *item as f32
+        }
+    }
+}
+
+impl TypeConvertSupported<f32> for i8 {
+    fn convert_slice(scaled: bool, input: &[Self], output: &mut [f32]) {
+        let n = input.len().min(output.len());
+        for i in 0..n {
+            output[i] = Self::convert_item(scaled, &input[i]);
+        }
+    }
+    fn convert_item(scaled: bool, item: &Self) -> f32 {
+        if scaled {
+            (*item as f32) / ((i8::MAX as f32) / 2.0) - 1.0
+        } else {
+            *item as f32
+        }
+    }
+}
+
+impl TypeConvertSupported<f32> for i16 {
+    fn convert_slice(scaled: bool, input: &[Self], output: &mut [f32]) {
+        let n = input.len().min(output.len());
+        for i in 0..n {
+            output[i] = Self::convert_item(scaled, &input[i]);
+        }
+    }
+    fn convert_item(scaled: bool, item: &Self) -> f32 {
+        if scaled {
+            (*item as f32) / ((i16::MAX as f32) / 2.0) - 1.0
+        } else {
+            *item as f32
+        }
+    }
+}
+
+// f32 to integer (scaled)
+impl TypeConvertSupported<u8> for f32 {
+    fn convert_slice(scaled: bool, input: &[Self], output: &mut [u8]) {
+        let n = input.len().min(output.len());
+        for i in 0..n {
+            output[i] = Self::convert_item(scaled, &input[i]);
+        }
+    }
+    fn convert_item(scaled: bool, item: &Self) -> u8 {
+        if scaled {
+            (*item * (u8::MAX as f32) * 0.5 + 128.0) as u8
+        } else {
+            *item as u8
+        }
+    }
+}
+
+impl TypeConvertSupported<i8> for f32 {
+    fn convert_slice(scaled: bool, input: &[Self], output: &mut [i8]) {
+        let n = input.len().min(output.len());
+        for i in 0..n {
+            output[i] = Self::convert_item(scaled, &input[i]);
+        }
+    }
+    fn convert_item(scaled: bool, item: &Self) -> i8 {
+        if scaled {
+            (*item * (i8::MAX as f32)) as i8
+        } else {
+            *item as i8
+        }
+    }
+}
+
+impl TypeConvertSupported<i16> for f32 {
+    fn convert_slice(scaled: bool, input: &[Self], output: &mut [i16]) {
+        let n = input.len().min(output.len());
+        for i in 0..n {
+            output[i] = Self::convert_item(scaled, &input[i]);
+        }
+    }
+    fn convert_item(scaled: bool, item: &Self) -> i16 {
+        if scaled {
+            (*item * (i16::MAX as f32)) as i16
+        } else {
+            *item as i16
+        }
+    }
+}
+
+#[doc(hidden)]
+impl<A, B, I, O> Kernel for TypeConverter<A, B, I, O>
+where
+    A: Send + Sync + Default + Clone + std::fmt::Debug + 'static + Copy + TypeConvertSupported<B>,
+    B: Send + Sync + Default + Clone + std::fmt::Debug + 'static + Copy,
+    I: CpuBufferReader<Item = A>,
+    O: CpuBufferWriter<Item = B>,
+{
+    async fn work(
+        &mut self,
+        io: &mut WorkIo,
+        _mio: &mut MessageOutputs,
+        _meta: &mut BlockMeta,
+    ) -> Result<()> {
+        let i = self.input.slice();
+        let o = self.output.slice();
+
+        let n = i.len().min(o.len());
+        if n > 0 {
+            A::convert_slice(self.scaled, &i[..n], &mut o[..n]);
+            self.input.consume(n);
+            self.output.produce(n);
+        }
+
+        if self.input.finished() && self.input.slice().is_empty() {
+            io.finished = true;
+        }
+
+        Ok(())
     }
 }
 
 impl<A, B> ConverterBuilder<A, B>
 where
-    A: Copy + Send + Sync + Default + std::fmt::Debug + 'static,
-    B: Copy + Send + Sync + Default + std::fmt::Debug + From<A> + 'static,
+    A: Send + Sync + Default + Clone + std::fmt::Debug + 'static + Copy + TypeConvertSupported<B>,
+    B: Send + Sync + Default + Clone + std::fmt::Debug + 'static + Copy,
 {
-    pub fn build(self) -> Apply<impl FnMut(&A) -> B + Send + 'static, A, B> {
-        Apply::new(|i: &A| -> B { (*i).into() })
-    }
-}
-
-impl ScaledConverterBuilder<u8, f32> {
-    pub fn build(self) -> Apply<impl FnMut(&u8) -> f32 + Send + 'static, u8, f32> {
-        Apply::new(|i: &u8| -> f32 { ScaledConverterBuilder::<u8, f32>::convert(i) })
-    }
-
-    pub fn convert(i: &u8) -> f32 {
-        (*i as f32) / ((u8::MAX as f32) / 2.0) - 1.0
-    }
-}
-
-impl ScaledConverterBuilder<u16, f32> {
-    pub fn build(self) -> Apply<impl FnMut(&u16) -> f32 + Send + 'static, u16, f32> {
-        Apply::new(|i: &u16| -> f32 { ScaledConverterBuilder::<u16, f32>::convert(i) })
-    }
-
-    pub fn convert(i: &u16) -> f32 {
-        (*i as f32) / ((u16::MAX as f32) / 2.0) - 1.0
-    }
-}
-
-impl ScaledConverterBuilder<u32, f32> {
-    pub fn build(self) -> Apply<impl FnMut(&u32) -> f32 + Send + 'static, u32, f32> {
-        Apply::new(|i: &u32| -> f32 { ScaledConverterBuilder::<u32, f32>::convert(i) })
-    }
-
-    pub fn convert(i: &u32) -> f32 {
-        (*i as f32) / ((u32::MAX as f32) / 2.0) - 1.0
-    }
-}
-
-impl ScaledConverterBuilder<i8, f32> {
-    pub fn build(self) -> Apply<impl FnMut(&i8) -> f32 + Send + 'static, i8, f32> {
-        Apply::new(|i: &i8| -> f32 { ScaledConverterBuilder::<i8, f32>::convert(i) })
-    }
-
-    pub fn convert(i: &i8) -> f32 {
-        (*i as f32) / ((i8::MAX as f32) / 2.0) - 1.0
-    }
-}
-
-impl ScaledConverterBuilder<i16, f32> {
-    pub fn build(self) -> Apply<impl FnMut(&i16) -> f32 + Send + 'static, i16, f32> {
-        Apply::new(|i: &i16| -> f32 { ScaledConverterBuilder::<i16, f32>::convert(i) })
-    }
-
-    pub fn convert(i: &i16) -> f32 {
-        (*i as f32) / ((i16::MAX as f32) / 2.0) - 1.0
-    }
-}
-
-impl ScaledConverterBuilder<i32, f32> {
-    pub fn build(self) -> Apply<impl FnMut(&i32) -> f32 + Send + 'static, i32, f32> {
-        Apply::new(|i: &i32| -> f32 { ScaledConverterBuilder::<i32, f32>::convert(i) })
-    }
-
-    pub fn convert(i: &i32) -> f32 {
-        (*i as f32) / ((i32::MAX as f32) / 2.0) - 1.0
-    }
-}
-
-impl ScaledConverterBuilder<f32, u8> {
-    pub fn build(self) -> Apply<impl FnMut(&f32) -> u8 + Send + 'static, f32, u8> {
-        Apply::new(|i: &f32| -> u8 { ScaledConverterBuilder::<f32, u8>::convert(i) })
-    }
-
-    pub fn convert(i: &f32) -> u8 {
-        (*i * (u8::MAX as f32) * 0.5 + 128.0) as u8
-    }
-}
-
-impl ScaledConverterBuilder<f32, i8> {
-    pub fn build(self) -> Apply<impl FnMut(&f32) -> i8 + Send + 'static, f32, i8> {
-        Apply::new(|i: &f32| -> i8 { ScaledConverterBuilder::<f32, i8>::convert(i) })
-    }
-
-    pub fn convert(i: &f32) -> i8 {
-        (*i * (i8::MAX as f32)) as i8
-    }
-}
-
-impl ScaledConverterBuilder<f32, i16> {
-    pub fn build(self) -> Apply<impl FnMut(&f32) -> i16 + Send + 'static, f32, i16> {
-        Apply::new(|i: &f32| -> i16 { ScaledConverterBuilder::<f32, i16>::convert(i) })
-    }
-
-    pub fn convert(i: &f32) -> i16 {
-        (*i * (i16::MAX as f32)) as i16
+    pub fn build(self) -> TypeConverter<A, B> {
+        TypeConverter::new(self.scaled)
     }
 }

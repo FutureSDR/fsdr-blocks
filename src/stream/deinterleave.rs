@@ -1,3 +1,5 @@
+#[cfg(feature = "simd")]
+use core::simd::Simd;
 use futuresdr::prelude::*;
 
 /// This blocks deinterleave a unique stream into two separate stream.
@@ -41,6 +43,130 @@ where
     }
 }
 
+pub trait DeinterleaveSupported: Copy {
+    fn deinterleave(
+        first: &mut bool,
+        input: &[Self],
+        out0: &mut [Self],
+        out1: &mut [Self],
+    ) -> (usize, usize, usize);
+}
+
+fn deinterleave_scalar_logic<A: Copy>(
+    first: &mut bool,
+    input: &[A],
+    out0: &mut [A],
+    out1: &mut [A],
+) -> (usize, usize, usize) {
+    let mut n_in = input.len();
+    let n_o0 = out0.len();
+    let n_o1 = out1.len();
+
+    let mut i_ptr = 0;
+    let mut o0_ptr = 0;
+    let mut o1_ptr = 0;
+
+    if !*first && n_in > 0 && n_o1 > 0 {
+        out1[o1_ptr] = input[i_ptr];
+        i_ptr += 1;
+        o1_ptr += 1;
+        n_in -= 1;
+        *first = true;
+    }
+
+    let n = (n_in / 2).min(n_o0 - o0_ptr).min(n_o1 - o1_ptr);
+    for j in 0..n {
+        out0[o0_ptr + j] = input[i_ptr + 2 * j];
+        out1[o1_ptr + j] = input[i_ptr + 2 * j + 1];
+    }
+
+    i_ptr += 2 * n;
+    o0_ptr += n;
+    o1_ptr += n;
+    n_in -= 2 * n;
+
+    if *first && n_in > 0 && out0.len() > o0_ptr {
+        out0[o0_ptr] = input[i_ptr];
+        i_ptr += 1;
+        o0_ptr += 1;
+        *first = false;
+    }
+    (i_ptr, o0_ptr, o1_ptr)
+}
+
+#[cfg(feature = "simd")]
+impl<A: Copy> DeinterleaveSupported for A {
+    default fn deinterleave(
+        first: &mut bool,
+        input: &[Self],
+        out0: &mut [Self],
+        out1: &mut [Self],
+    ) -> (usize, usize, usize) {
+        deinterleave_scalar_logic(first, input, out0, out1)
+    }
+}
+
+#[cfg(not(feature = "simd"))]
+impl<A: Copy> DeinterleaveSupported for A {
+    fn deinterleave(
+        first: &mut bool,
+        input: &[Self],
+        out0: &mut [Self],
+        out1: &mut [Self],
+    ) -> (usize, usize, usize) {
+        deinterleave_scalar_logic(first, input, out0, out1)
+    }
+}
+
+#[cfg(feature = "simd")]
+macro_rules! impl_deinterleave_simd {
+    ($($t:ty),*) => {
+        $(
+            impl DeinterleaveSupported for $t {
+                fn deinterleave(first: &mut bool, input: &[Self], out0: &mut [Self], out1: &mut [Self]) -> (usize, usize, usize) {
+                    let mut n_in = input.len();
+                    let n_o0 = out0.len();
+                    let n_o1 = out1.len();
+
+                    let mut i_ptr = 0;
+                    let mut o0_ptr = 0;
+                    let mut o1_ptr = 0;
+
+                    if !*first && n_in > 0 && n_o1 > 0 {
+                        out1[o1_ptr] = input[i_ptr];
+                        i_ptr += 1;
+                        o1_ptr += 1;
+                        n_in -= 1;
+                        *first = true;
+                    }
+
+                    const LANES: usize = 8;
+                    let n_simd = (n_in / (2 * LANES)).min((n_o0 - o0_ptr) / LANES).min((n_o1 - o1_ptr) / LANES);
+
+                    for _ in 0..n_simd {
+                        let v0 = Simd::<$t, LANES>::from_slice(&input[i_ptr..i_ptr + LANES]);
+                        let v1 = Simd::<$t, LANES>::from_slice(&input[i_ptr + LANES..i_ptr + 2 * LANES]);
+
+                        let (even, odd) = v0.deinterleave(v1);
+                        even.copy_to_slice(&mut out0[o0_ptr..o0_ptr + LANES]);
+                        odd.copy_to_slice(&mut out1[o1_ptr..o1_ptr + LANES]);
+
+                        i_ptr += 2 * LANES;
+                        o0_ptr += LANES;
+                        o1_ptr += LANES;
+                    }
+
+                    let (i_rem, o0_rem, o1_rem) = deinterleave_scalar_logic(first, &input[i_ptr..], &mut out0[o0_ptr..], &mut out1[o1_ptr..]);
+                    (i_ptr + i_rem, o0_ptr + o0_rem, o1_ptr + o1_rem)
+                }
+            }
+        )*
+    };
+}
+
+#[cfg(feature = "simd")]
+impl_deinterleave_simd!(f32, u8, i8, i16);
+
 impl<A, I, O0, O1> Default for Deinterleave<A, I, O0, O1>
 where
     A: Send + Sync + Default + Clone + std::fmt::Debug + 'static + Copy,
@@ -56,7 +182,7 @@ where
 #[doc(hidden)]
 impl<A, I, O0, O1> Kernel for Deinterleave<A, I, O0, O1>
 where
-    A: Send + Sync + Default + Clone + std::fmt::Debug + 'static + Copy,
+    A: Send + Sync + Default + Clone + std::fmt::Debug + 'static + Copy + DeinterleaveSupported,
     I: CpuBufferReader<Item = A>,
     O0: CpuBufferWriter<Item = A>,
     O1: CpuBufferWriter<Item = A>,
@@ -68,35 +194,11 @@ where
         _meta: &mut BlockMeta,
     ) -> Result<()> {
         let (m, m0, m1) = {
-            let i0 = self.input.slice();
+            let i = self.input.slice();
             let o0 = self.out0.slice();
             let o1 = self.out1.slice();
 
-            let mut m0 = 0;
-            let mut m1 = 0;
-
-            let mut it0 = o0.iter_mut();
-            let mut it1 = o1.iter_mut();
-
-            for x in i0.iter() {
-                if self.first {
-                    if let Some(d) = it0.next() {
-                        *d = *x;
-                        m0 += 1;
-                    } else {
-                        break;
-                    }
-                } else {
-                    if let Some(d) = it1.next() {
-                        *d = *x;
-                        m1 += 1;
-                    } else {
-                        break;
-                    }
-                }
-                self.first = !self.first;
-            }
-            (m0 + m1, m0, m1)
+            A::deinterleave(&mut self.first, i, o0, o1)
         };
 
         self.input.consume(m);
