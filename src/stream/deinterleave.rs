@@ -1,3 +1,4 @@
+#[cfg(feature = "simd")]
 use core::simd::Simd;
 use futuresdr::prelude::*;
 
@@ -93,6 +94,7 @@ fn deinterleave_scalar_logic<A: Copy>(
     (i_ptr, o0_ptr, o1_ptr)
 }
 
+#[cfg(feature = "simd")]
 impl<A: Copy> DeinterleaveSupported for A {
     default fn deinterleave(
         first: &mut bool,
@@ -104,6 +106,19 @@ impl<A: Copy> DeinterleaveSupported for A {
     }
 }
 
+#[cfg(not(feature = "simd"))]
+impl<A: Copy> DeinterleaveSupported for A {
+    fn deinterleave(
+        first: &mut bool,
+        input: &[Self],
+        out0: &mut [Self],
+        out1: &mut [Self],
+    ) -> (usize, usize, usize) {
+        deinterleave_scalar_logic(first, input, out0, out1)
+    }
+}
+
+#[cfg(feature = "simd")]
 macro_rules! impl_deinterleave_simd {
     ($($t:ty),*) => {
         $(
@@ -149,6 +164,7 @@ macro_rules! impl_deinterleave_simd {
     };
 }
 
+#[cfg(feature = "simd")]
 impl_deinterleave_simd!(f32, u8, i8, i16);
 
 impl<A, I, O0, O1> Default for Deinterleave<A, I, O0, O1>

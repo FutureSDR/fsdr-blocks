@@ -37,6 +37,7 @@ serde_json = "1"
 
 [features]
 default = []
+simd = []
 crossbeam = ["dep:crossbeam-channel"]
 async-channel = ["dep:async-channel"]
 cw = ["dep:bimap"]
@@ -74,4 +75,9 @@ required-features = ["cw"]
 [[bench]]
 name = "deinterleave"
 path = "benches/stream/deinterleave.rs"
+harness = false
+
+[[bench]]
+name = "type_converters"
+path = "benches/type_converters.rs"
 harness = false
