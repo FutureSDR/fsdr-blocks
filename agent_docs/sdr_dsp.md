@@ -11,5 +11,6 @@
 - **Type Converters:** Crucial for translating between raw bytes and SDR-specific types.
 
 ## Math Operations
-- Prefer vectorized operations where possible, though many blocks currently use iterator-based processing for the compiler to auto-vectorize.
-- Be mindful of floating-point precision and squelch thresholds.
+- **Prefer Explicit SIMD:** Use `std::simd` and specialization (see `DeinterleaveSupported`) for performance-critical blocks in hot loops. This avoids dependency on brittle compiler autovectorization.
+- **Precision:** Be mindful of floating-point precision and squelch thresholds.
+- **Error Accumulation:** Periodically re-calculate phase in recurrence relations to prevent drift (e.g., in `FreqShift`).

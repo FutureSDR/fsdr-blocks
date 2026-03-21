@@ -70,3 +70,8 @@ name = "shared"
 path = "benches/cw/shared.rs"
 harness = false
 required-features = ["cw"]
+
+[[bench]]
+name = "deinterleave"
+path = "benches/stream/deinterleave.rs"
+harness = false

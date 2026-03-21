@@ -3,8 +3,9 @@
 Building blocks for FutureSDR signal processing library for SDR and real-time DSP.
 
 ## Tech Stack
-- **Language:** Rust (Edition 2024)
+- **Language:** Rust (Edition 2024, **Nightly channel**)
 - **Core Library:** [FutureSDR](https://www.futuresdr.org)
+- **Acceleration:** Explicit SIMD via `std::simd` (portable SIMD)
 - **Serialization:** Serde, custom PMT (Polymorphic Types)
 - **Testing:** Cargo test, QuickCheck, Criterion (benchmarks)
 
