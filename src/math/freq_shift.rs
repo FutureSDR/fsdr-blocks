@@ -82,16 +82,8 @@ impl FreqShiftSupported for Complex32 {
                 let v_br_re = f32x8::splat(block_rotation_angle.cos());
                 let v_br_im = f32x8::splat(block_rotation_angle.sin());
 
-                let mut temp_nco = nco.clone();
-                let mut cos_arr = [0.0f32; LANES];
-                let mut sin_arr = [0.0f32; LANES];
-                for j in 0..LANES {
-                    cos_arr[j] = temp_nco.phase.cos();
-                    sin_arr[j] = temp_nco.phase.sin();
-                    temp_nco.step();
-                }
-                let mut block_phasor_cos = f32x8::from_array(cos_arr);
-                let mut block_phasor_sin = f32x8::from_array(sin_arr);
+                let mut block_phasor_cos = f32x8::splat(0.0);
+                let mut block_phasor_sin = f32x8::splat(0.0);
 
                 let i_f32 =
                     unsafe { core::slice::from_raw_parts(input.as_ptr() as *const f32, n * 2) };
@@ -100,6 +92,19 @@ impl FreqShiftSupported for Complex32 {
                 };
 
                 for i in 0..n_simd {
+                    if i % 128 == 0 {
+                        let mut temp_nco = *nco;
+                        let mut cos_arr = [0.0f32; LANES];
+                        let mut sin_arr = [0.0f32; LANES];
+                        for j in 0..LANES {
+                            cos_arr[j] = temp_nco.phase.cos();
+                            sin_arr[j] = temp_nco.phase.sin();
+                            temp_nco.step();
+                        }
+                        block_phasor_cos = f32x8::from_array(cos_arr);
+                        block_phasor_sin = f32x8::from_array(sin_arr);
+                    }
+
                     let v0 = f32x8::from_slice(&i_f32[i * LANES * 2..i * LANES * 2 + 8]);
                     let v1 = f32x8::from_slice(&i_f32[i * LANES * 2 + 8..i * LANES * 2 + 16]);
                     let (v_re, v_im) = v0.deinterleave(v1);
@@ -115,8 +120,8 @@ impl FreqShiftSupported for Complex32 {
                     let next_sin = block_phasor_cos * v_br_im + block_phasor_sin * v_br_re;
                     block_phasor_cos = next_cos;
                     block_phasor_sin = next_sin;
+                    nco.steps(LANES as i32);
                 }
-                nco.steps((n_simd * LANES) as i32);
             }
 
             let tail_start = n_simd * LANES;
