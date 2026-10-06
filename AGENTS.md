@@ -18,6 +18,7 @@ Building blocks for FutureSDR signal processing library for SDR and real-time DS
 - [Architecture](agent_docs/architecture.md): **Trigger:** Designing new blocks or understanding flowgraph connectivity.
 - [Conventions](agent_docs/conventions.md): **Trigger:** Before writing any code to ensure alignment with Rust 2024 and FutureSDR idioms.
 - [SDR & DSP](agent_docs/sdr_dsp.md): **Trigger:** Modifying signal processing logic, gain control, or frequency shifts.
+- [Vectorization](agent_docs/vectorization.md): **Trigger:** Optimizing DSP loops, float math, or SIMD performance.
 - [SigMF](agent_docs/sigmf.md): **Trigger:** Working with Signal Metadata Format (SigMF) recordings or collections.
 
 ## Verification Loop
