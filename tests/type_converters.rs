@@ -1,10 +1,6 @@
 use fsdr_blocks::type_converters::*;
-use futuresdr::blocks::VectorSink;
-use futuresdr::blocks::VectorSource;
-use futuresdr::runtime::Flowgraph;
-use futuresdr::runtime::Result;
-use futuresdr::runtime::Runtime;
-use futuresdr::runtime::macros::connect;
+use futuresdr::blocks::{VectorSink, VectorSource};
+use futuresdr::prelude::*;
 
 #[test]
 fn convert_u8_f32() -> Result<()> {
@@ -21,8 +17,8 @@ fn convert_u8_f32() -> Result<()> {
     );
     let fg = Runtime::new().run(fg)?;
 
-    let binding = vect_sink.get(&fg)?;
-    let v = binding.items();
+    let snk = fg.block(&vect_sink)?;
+    let v = snk.items();
 
     assert_eq!(v.len(), orig.len());
     for (v_before, v_after) in orig.iter().zip(v) {
@@ -32,31 +28,73 @@ fn convert_u8_f32() -> Result<()> {
     Ok(())
 }
 
-// #[test]
-// fn convert_u8_f32_with_scale_3() -> Result<()> {
-//     const SCALE_FACTOR: f32 = 3.0;
-//     let mut fg = Flowgraph::new();
+#[test]
+fn test_signed_zero_centered_scaled_converters() -> Result<()> {
+    // Test i8 <-> f32
+    assert_eq!(ScaledConverterBuilder::<i8, f32>::convert(&0), 0.0);
+    assert_eq!(ScaledConverterBuilder::<i8, f32>::convert(&127), 1.0);
+    assert_eq!(ScaledConverterBuilder::<i8, f32>::convert(&-127), -1.0);
+    assert_eq!(ScaledConverterBuilder::<f32, i8>::convert(&0.0), 0);
+    assert_eq!(ScaledConverterBuilder::<f32, i8>::convert(&1.0), 127);
+    assert_eq!(ScaledConverterBuilder::<f32, i8>::convert(&-1.0), -127);
+    // Boundary clamp check
+    assert_eq!(ScaledConverterBuilder::<f32, i8>::convert(&10.0), 127);
+    assert_eq!(ScaledConverterBuilder::<f32, i8>::convert(&-10.0), -128);
 
-//     let convert_u8_f32 = TypeConvertersBuilder::convert::<u8, f32>()
-//         .scale(SCALE_FACTOR)
-//         .build();
+    // Test i16 <-> f32
+    assert_eq!(ScaledConverterBuilder::<i16, f32>::convert(&0), 0.0);
+    assert_eq!(ScaledConverterBuilder::<i16, f32>::convert(&32767), 1.0);
+    assert_eq!(ScaledConverterBuilder::<i16, f32>::convert(&-32767), -1.0);
+    assert_eq!(ScaledConverterBuilder::<f32, i16>::convert(&0.0), 0);
+    assert_eq!(ScaledConverterBuilder::<f32, i16>::convert(&1.0), 32767);
+    assert_eq!(ScaledConverterBuilder::<f32, i16>::convert(&-1.0), -32767);
+    assert_eq!(ScaledConverterBuilder::<f32, i16>::convert(&10.0), 32767);
 
-//     let orig: Vec<u8> = vec![1, 0, 255, 42, 53, 89, 75];
-//     let src = VectorSource::<u8>::new(orig.clone());
-//     let vect_sink = VectorSink::<f32>::new(1024);
+    // Test i32 <-> f32
+    assert_eq!(ScaledConverterBuilder::<i32, f32>::convert(&0), 0.0);
+    assert_eq!(ScaledConverterBuilder::<i32, f32>::convert(&i32::MAX), 1.0);
+    assert_eq!(ScaledConverterBuilder::<f32, i32>::convert(&0.0), 0);
 
-//     connect!(fg,
-//         src > convert_u8_f32 > vect_sink;
-//     );
-//     Runtime::new().run(fg)?;
+    Ok(())
+}
 
-//     let snk = vect_sink.get()?;
-//     let v = snk.items();
+#[test]
+fn test_unsigned_midpoint_scaled_converters() -> Result<()> {
+    // Test u8 <-> f32 (128 is 0.0)
+    assert_eq!(ScaledConverterBuilder::<u8, f32>::convert(&128), 0.0);
+    assert_eq!(ScaledConverterBuilder::<u8, f32>::convert(&0), -1.0);
+    assert_eq!(ScaledConverterBuilder::<f32, u8>::convert(&0.0), 128);
+    assert_eq!(ScaledConverterBuilder::<f32, u8>::convert(&-1.0), 0);
+    assert_eq!(ScaledConverterBuilder::<f32, u8>::convert(&1.0), 255);
 
-//     assert_eq!(v.len(), orig.len());
-//     for (v_before, v_after) in orig.iter().zip(v) {
-//         assert!(((*v_after as f32) - SCALE_FACTOR*(*v_before as f32)).abs() < f32::EPSILON);
-//     }
+    // Test u16 <-> f32 (32768 is 0.0)
+    assert_eq!(ScaledConverterBuilder::<u16, f32>::convert(&32768), 0.0);
+    assert_eq!(ScaledConverterBuilder::<u16, f32>::convert(&0), -1.0);
+    assert_eq!(ScaledConverterBuilder::<f32, u16>::convert(&0.0), 32768);
 
-//     Ok(())
-// }
+    Ok(())
+}
+
+#[test]
+fn test_scaled_conversion_in_flowgraph() -> Result<()> {
+    let mut fg = Flowgraph::new();
+
+    let orig: Vec<i16> = vec![0, 32767, -32767, 16383, -16383];
+    let src = VectorSource::<i16>::new(orig);
+    let conv = TypeConvertersBuilder::scale_convert::<i16, f32>().build();
+    let snk = VectorSink::<f32>::new(1024);
+
+    connect!(fg, src > conv > snk);
+    let fg = Runtime::new().run(fg)?;
+
+    let snk = fg.block(&snk)?;
+    let items = snk.items();
+    assert_eq!(items.len(), 5);
+    assert_eq!(items[0], 0.0);
+    assert!((items[1] - 1.0).abs() < 1e-4);
+    assert!((items[2] - (-1.0)).abs() < 1e-4);
+    assert!((items[3] - 0.5).abs() < 1e-3);
+    assert!((items[4] - (-0.5)).abs() < 1e-3);
+
+    Ok(())
+}

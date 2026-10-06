@@ -56,7 +56,7 @@ impl<T: Send + Sync + Clone + 'static, I: CpuBufferReader<Item = T>> Kernel
         &mut self,
         io: &mut WorkIo,
         _mio: &mut MessageOutputs,
-        _meta: &mut BlockMeta,
+        _meta: &BlockMeta,
     ) -> Result<()> {
         let i = self.input.slice();
 
@@ -64,13 +64,13 @@ impl<T: Send + Sync + Clone + 'static, I: CpuBufferReader<Item = T>> Kernel
         if i_len > 0 {
             match self.sender.try_send(i.into()) {
                 Ok(_) => {
-                    // info!("sent data...");
+                    self.input.consume(i_len);
                 }
-                Err(_err) => {
-                    // info!("{}", err.to_string());
+                Err(async_channel::TrySendError::Full(_)) => {}
+                Err(async_channel::TrySendError::Closed(_)) => {
+                    io.finished = true;
                 }
             }
-            self.input.consume(i_len);
         }
 
         if self.input.finished() {

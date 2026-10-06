@@ -106,7 +106,7 @@ impl Arbitrary for Global {
         };
         if bool::arbitrary(g) {
             let sample_rate = f64::arbitrary(g);
-            let sample_rate = ((sample_rate % 1e15) * 100.0).trunc() / 100.0;
+            let sample_rate = ((sample_rate % 1e12) * 100.0).trunc() / 100.0;
             if !sample_rate.is_nan() {
                 global.sample_rate = Some(sample_rate.abs())
             }

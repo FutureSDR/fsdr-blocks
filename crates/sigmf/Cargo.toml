@@ -16,20 +16,20 @@ default = ["quickcheck"]
 quickcheck=['dep:quickcheck']
 
 [dependencies]
-serde = "^1.0"
-serde_derive = "^1.0"
-serde_json = "^1.0"
-thiserror = "2.0"
-quickcheck = {version = "1.1", optional = true}
-uuid = {version = "1.21", features = ["serde"]}
-sha2 = { version = "0.10"}
-hex = { version = "0.4"}
+serde = { workspace = true }
+serde_derive = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+quickcheck = { workspace = true, optional = true }
+uuid = { workspace = true }
+sha2 = { workspace = true }
+hex = { workspace = true }
 
 [build-dependencies]
-rustc_version = "0.4.0"
+rustc_version = { workspace = true }
 
 [dev-dependencies]
-quickcheck_macros = "1"
+quickcheck_macros = { workspace = true }
 
 [lib]
 name = "sigmf"

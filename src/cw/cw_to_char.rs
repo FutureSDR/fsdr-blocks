@@ -1,6 +1,6 @@
 use futuresdr::runtime::dev::prelude::*;
 
-use crate::cw::shared::CWAlphabet::{self, LetterSpace, WordSpace};
+use crate::cw::shared::CWAlphabet;
 use crate::cw::shared::get_alphabet;
 use bimap::BiMap;
 
@@ -43,54 +43,95 @@ where
         &mut self,
         io: &mut WorkIo,
         _mio: &mut MessageOutputs,
-        _meta: &mut BlockMeta,
+        _meta: &BlockMeta,
     ) -> Result<()> {
-        let i = self.input.slice();
+        let i_len = {
+            let i = self.input.slice();
+            if !i.is_empty() {
+                self.symbol_vec.extend_from_slice(i);
+            }
+            i.len()
+        };
+        if i_len > 0 {
+            self.input.consume(i_len);
+        }
         let o = self.output.slice();
 
-        let (consumed, produced, finished) = if i.is_empty() {
-            (0, 0, self.input.finished())
-        } else {
-            // Not doing any checks on the output buffer length here.
-            // Assuming, that i and o are of the same length.
-            // Assuming, that one input sample generates at max one output sample.
-            self.symbol_vec.append(&mut i.to_vec());
+        let mut produced = 0;
+        if !self.symbol_vec.is_empty() && !o.is_empty() {
+            let mut consumed_raw = 0;
+            let mut current_token = Vec::new();
+            let mut out_idx = 0;
 
-            let mut produced = 0;
-            if self.symbol_vec.contains(&WordSpace) || self.symbol_vec.contains(&LetterSpace) {
-                let symbols: Vec<_> = self
-                    .symbol_vec
-                    .split_inclusive(|c| c == &LetterSpace || c == &WordSpace)
-                    .filter_map(|c| c.split_last())
-                    .map(|(last, elements)| {
-                        //println!("last: {}, elements: {:?}", last, elements);
-                        if last == &WordSpace {
-                            *self.alphabet.get_by_right(&vec![WordSpace]).unwrap_or(&'_')
-                        } else {
-                            *self.alphabet.get_by_right(elements).unwrap_or(&'_')
-                        }
-                    })
-                    .collect();
+            let input_finished = self.input.finished();
 
-                let n = std::cmp::min(symbols.len(), o.len());
-                for j in 0..n {
-                    o[j] = symbols[j] as u32;
-                    //println!("c: {}, index: {}, produced: {}", c, index, produced);
+            for (idx, &sym) in self.symbol_vec.iter().enumerate() {
+                if out_idx >= o.len() {
+                    break;
                 }
-                produced = n;
-                self.symbol_vec.clear(); // This might be wrong if we didn't consume everything, but original did this
+                match sym {
+                    CWAlphabet::Dot | CWAlphabet::Dash => {
+                        current_token.push(sym);
+                    }
+                    CWAlphabet::LetterSpace => {
+                        if !current_token.is_empty() {
+                            let ch = *self.alphabet.get_by_right(&current_token).unwrap_or(&'_');
+                            o[out_idx] = ch as u32;
+                            out_idx += 1;
+                            current_token.clear();
+                        }
+                        consumed_raw = idx + 1;
+                    }
+                    CWAlphabet::WordSpace => {
+                        if !current_token.is_empty() {
+                            let ch = *self.alphabet.get_by_right(&current_token).unwrap_or(&'_');
+                            o[out_idx] = ch as u32;
+                            out_idx += 1;
+                            current_token.clear();
+                        }
+                        if out_idx < o.len() {
+                            let space = *self
+                                .alphabet
+                                .get_by_right(&vec![CWAlphabet::WordSpace])
+                                .unwrap_or(&' ');
+                            o[out_idx] = space as u32;
+                            out_idx += 1;
+                            consumed_raw = idx + 1;
+                        }
+                    }
+                    CWAlphabet::Unknown => {
+                        if !current_token.is_empty() {
+                            let ch = *self.alphabet.get_by_right(&current_token).unwrap_or(&'_');
+                            o[out_idx] = ch as u32;
+                            out_idx += 1;
+                            current_token.clear();
+                        }
+                        if out_idx < o.len() {
+                            o[out_idx] = '_' as u32;
+                            out_idx += 1;
+                            consumed_raw = idx + 1;
+                        }
+                    }
+                }
             }
 
-            (i.len(), produced, self.input.finished())
-        };
+            if input_finished && !current_token.is_empty() && out_idx < o.len() {
+                let ch = *self.alphabet.get_by_right(&current_token).unwrap_or(&'_');
+                o[out_idx] = ch as u32;
+                out_idx += 1;
+                consumed_raw = self.symbol_vec.len();
+            }
 
-        if consumed > 0 {
-            self.input.consume(consumed);
+            if consumed_raw > 0 {
+                self.symbol_vec.drain(..consumed_raw);
+            }
+            produced = out_idx;
         }
+
         if produced > 0 {
             self.output.produce(produced);
         }
-        if finished {
+        if self.input.finished() && self.symbol_vec.is_empty() {
             io.finished = true;
         }
 

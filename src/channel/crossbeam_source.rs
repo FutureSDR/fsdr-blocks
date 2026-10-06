@@ -62,7 +62,7 @@ impl<T: Send + Sync + Copy + 'static, O: CpuBufferWriter<Item = T>> Kernel
         &mut self,
         io: &mut WorkIo,
         _mio: &mut MessageOutputs,
-        _meta: &mut BlockMeta,
+        _meta: &BlockMeta,
     ) -> Result<()> {
         let (produced, call_again, finished) = {
             let out = self.output.slice();

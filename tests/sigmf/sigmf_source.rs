@@ -3,11 +3,7 @@ use fsdr_blocks::sigmf::SigMFSourceBuilder;
 use futuresdr::blocks::VectorSink;
 use futuresdr::futures::io::BufReader;
 use futuresdr::futures::io::Cursor;
-use futuresdr::num_complex::Complex;
-use futuresdr::runtime::Flowgraph;
-use futuresdr::runtime::Result;
-use futuresdr::runtime::Runtime;
-use futuresdr::runtime::macros::connect;
+use futuresdr::prelude::*;
 use sigmf::DatasetFormat;
 use sigmf::DescriptionBuilder;
 
@@ -27,9 +23,8 @@ where
 
     let actual_file = Cursor::new(Vec::from(data));
     let actual_file = BufReader::new(actual_file);
-    let src = futuresdr::futures::executor::block_on(
-        SigMFSourceBuilder::with_data_and_description(actual_file, desc).build::<T>(),
-    )?;
+    let src =
+        block_on(SigMFSourceBuilder::with_data_and_description(actual_file, desc).build::<T>())?;
     let snk = VectorSink::<T>::new(1024);
 
     connect!(fg,
@@ -38,8 +33,8 @@ where
 
     let fg = Runtime::new().run(fg)?;
 
-    let binding = snk.get(&fg)?;
-    Ok(binding.items().clone())
+    let snk = fg.block(&snk)?;
+    Ok(snk.items().to_vec())
 }
 
 #[test]

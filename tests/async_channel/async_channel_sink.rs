@@ -1,9 +1,6 @@
 use fsdr_blocks::async_channel::AsyncChannelSink;
 use futuresdr::blocks::VectorSource;
-use futuresdr::runtime::Flowgraph;
-use futuresdr::runtime::Result;
-use futuresdr::runtime::Runtime;
-use futuresdr::runtime::macros::connect;
+use futuresdr::prelude::*;
 
 #[test]
 fn run_async_channel_sink_f32() -> Result<()> {

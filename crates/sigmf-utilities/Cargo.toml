@@ -12,19 +12,19 @@ readme = "README.md"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-anyhow = "1.0"
-clap = { version = "4.5", features = ["derive"] }
-fsdr-blocks = {path="../../"}
-futuresdr = { version = "0.0.40" }
-serde = "^1.0"
-serde_derive = "^1.0"
-serde_json = "^1.0"
-sigmf = {path="../sigmf"}
-thiserror = "2.0"
-walkdir = "2.5"
+anyhow = { workspace = true }
+clap = { workspace = true }
+fsdr-blocks = { path = "../../" }
+futuresdr = { workspace = true }
+serde = { workspace = true }
+serde_derive = { workspace = true }
+serde_json = { workspace = true }
+sigmf = { path = "../sigmf" }
+thiserror = { workspace = true }
+walkdir = { workspace = true }
 
 [build-dependencies]
-rustc_version = "0.4.0"
+rustc_version = { workspace = true }
 
 [dev-dependencies]
 

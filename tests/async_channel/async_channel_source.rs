@@ -1,8 +1,6 @@
 use fsdr_blocks::async_channel::AsyncChannelSource;
 use futuresdr::blocks::{Head, VectorSink};
-use futuresdr::runtime::Result;
-use futuresdr::runtime::macros::connect;
-use futuresdr::runtime::{Flowgraph, Runtime};
+use futuresdr::prelude::*;
 
 #[test]
 fn run_async_channel_source_u32() -> Result<()> {
@@ -27,8 +25,8 @@ async fn async_channel_source_u32() -> Result<()> {
 
     let fg = Runtime::new().run(fg)?;
 
-    let binding = vector_snk.get(&fg)?;
-    let received = binding.items();
+    let snk = fg.block(&vector_snk)?;
+    let received = snk.items();
 
     // debug!("{}", received.len());
     // debug!("{}", orig.len());

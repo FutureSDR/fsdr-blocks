@@ -6,10 +6,7 @@ use fsdr_blocks::sigmf::{SigMFSinkBuilder, SigMFSourceBuilder};
 use fsdr_blocks::type_converters::TypeConvertersBuilder;
 use futuresdr::blocks::Apply;
 use futuresdr::blocks::TagDebug;
-use futuresdr::runtime::Flowgraph;
-use futuresdr::runtime::Result;
-use futuresdr::runtime::Runtime;
-use futuresdr::runtime::macros::connect;
+use futuresdr::prelude::*;
 use std::path::PathBuf;
 
 #[derive(Parser)]
@@ -28,7 +25,7 @@ impl Cli {
         let mut fg = Flowgraph::new();
 
         let mut src_builder = SigMFSourceBuilder::from(&self.input);
-        let src = fg.add(src_builder.build::<f32>().await?);
+        let src = fg.add_async(src_builder.build::<f32>().await?).await?;
 
         let snk = SigMFSinkBuilder::from(self.output);
 
@@ -60,13 +57,8 @@ impl Cli {
             }
             _ => return Err(anyhow!("Unsupported target type: {}", self.target)),
         };
-        // fg.connect_stream(src, "out", conv, "in")
-        //     .with_context(|| "src->conv")?;
-        // fg.connect_stream(conv, "out", snk, "in")
-        //     .with_context(|| "conv->snk")?;
 
         let tag_dbg = TagDebug::<f32>::new("debugger");
-        // fg.connect_stream(src, "out", tag_dbg, "in")?;
         connect!(fg, src > tag_dbg);
 
         Runtime::new().run(fg)?;
@@ -76,7 +68,7 @@ impl Cli {
 
 fn main() {
     let cli = Cli::parse();
-    if let Err(err) = futuresdr::futures::executor::block_on(cli.execute()) {
+    if let Err(err) = block_on(cli.execute()) {
         eprintln!("{:#}", err);
     }
 }

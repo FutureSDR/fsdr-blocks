@@ -32,7 +32,7 @@ use crate::serde_pmt::from_pmt;
 #[cfg_attr(docsrs, doc(cfg(not(target_arch = "wasm32"))))]
 #[derive(Block)]
 pub struct SigMFSink<
-    T: Send + Sync + Default + Clone + std::fmt::Debug + 'static,
+    T: Send + Sync + Default + Copy + std::fmt::Debug + 'static,
     W: Write + Send + 'static,
     M: Write + Send + 'static,
     I: CpuBufferReader<Item = T> = DefaultCpuReader<T>,
@@ -48,7 +48,7 @@ pub struct SigMFSink<
 
 impl<T, W, M, I> SigMFSink<T, W, M, I>
 where
-    T: Send + Sync + Default + Clone + std::fmt::Debug + 'static,
+    T: Send + Sync + Default + Copy + std::fmt::Debug + 'static,
     W: Write + Send + 'static,
     M: Write + Send + 'static,
     I: CpuBufferReader<Item = T>,
@@ -67,48 +67,12 @@ where
 pub fn convert_pmt_to_annotation(value: &Pmt) -> Option<Annotation> {
     let annot: crate::serde_pmt::error::Result<Annotation> = from_pmt(value.clone());
     annot.ok()
-    // match value {
-    //     Pmt::MapStrPmt(dict) => {
-    //         let mut annot = Annotation::default();
-    //         let mut is_some = false;
-    //         if let Some(Pmt::String(label)) = dict.get("label") {
-    //             annot.label = Some(label.to_owned());
-    //             is_some = true;
-    //         }
-    //         if let Some(Pmt::String(label)) = dict.get("core:label") {
-    //             annot.label = Some(label.to_owned());
-    //             is_some = true;
-    //         }
-    //         if let Some(Pmt::Usize(annot_sample_start)) = dict.get("sample_start") {
-    //             annot.sample_start = Some(*annot_sample_start);
-    //             is_some = true;
-    //         }
-    //         if let Some(Pmt::Usize(annot_sample_start)) = dict.get("core:sample_start") {
-    //             annot.sample_start = Some(*annot_sample_start);
-    //             is_some = true;
-    //         }
-    //         if let Some(Pmt::Usize(annot_sample_count)) = dict.get("sample_count") {
-    //             annot.sample_count = Some(*annot_sample_count);
-    //             is_some = true;
-    //         }
-    //         if let Some(Pmt::Usize(annot_sample_count)) = dict.get("core:sample_count") {
-    //             annot.sample_count = Some(*annot_sample_count);
-    //             is_some = true;
-    //         }
-    //         if is_some {
-    //             Some(annot)
-    //         } else {
-    //             None
-    //         }
-    //     }
-    //     _ => None,
-    // }
 }
 
 #[doc(hidden)]
 impl<T, W, M, I> Kernel for SigMFSink<T, W, M, I>
 where
-    T: Send + Sync + Default + Clone + std::fmt::Debug + 'static,
+    T: Send + Sync + Default + Copy + std::fmt::Debug + 'static,
     W: Write + Send + 'static,
     M: Write + Send + 'static,
     I: CpuBufferReader<Item = T>,
@@ -117,27 +81,24 @@ where
         &mut self,
         io: &mut WorkIo,
         _mio: &mut MessageOutputs,
-        _meta: &mut BlockMeta,
+        _meta: &BlockMeta,
     ) -> Result<()> {
         let items = {
             let (i, tags) = self.input.slice_with_tags();
             let items = i.len();
 
             if items > 0 {
+                // Safety: casts contiguous slice of plain data items to byte slice for I/O writing
                 let bytes = unsafe {
                     std::slice::from_raw_parts(i.as_ptr() as *const u8, std::mem::size_of_val(i))
                 };
                 self.writer.write_all(bytes)?;
             }
             for item in tags {
-                // let index = item.index;
-                #[allow(clippy::single_match)] // Because of todo!()
-                if let Tag::Data(pmt) = &item.tag {
-                    if let Some(annot) = convert_pmt_to_annotation(pmt) {
-                        self.description.add_annotation(annot)?;
-                    }
-                } else {
-                    // todo!("Automate other pmt to annotation")
+                if let Tag::Data(pmt) = &item.tag
+                    && let Some(annot) = convert_pmt_to_annotation(pmt)
+                {
+                    self.description.add_annotation(annot)?;
                 }
             }
 
@@ -153,16 +114,7 @@ where
         Ok(())
     }
 
-    // async fn init(
-    //     &mut self,
-    //     _sio: &mut StreamIo,
-    //     _mio: &mut MessageOutputs,
-    //     _meta: &mut BlockMeta,
-    // ) -> Result<()> {
-    //     Ok(())
-    // }
-
-    async fn deinit(&mut self, _mio: &mut MessageOutputs, _meta: &mut BlockMeta) -> Result<()> {
+    async fn deinit(&mut self, _mio: &mut MessageOutputs, _meta: &BlockMeta) -> Result<()> {
         let desc = self.description.build()?;
         desc.to_writer_pretty(&mut self.meta_writer)?;
         Ok(())
@@ -229,7 +181,7 @@ impl From<&str> for SigMFSinkBuilder {
 }
 
 impl SigMFSinkBuilder {
-    pub async fn build<T: Send + Sync + Default + Clone + std::fmt::Debug + 'static>(
+    pub async fn build<T: Send + Sync + Default + Copy + std::fmt::Debug + 'static>(
         &mut self,
     ) -> Result<SigMFSink<T, std::fs::File, std::fs::File>> {
         let desc = DescriptionBuilder::from(self.datatype);

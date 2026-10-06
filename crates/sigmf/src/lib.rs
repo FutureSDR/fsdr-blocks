@@ -1,3 +1,13 @@
+//! Rust implementation of the Signal Metadata Format (SigMF) specification.
+//!
+//! ## Overview
+//! Provides data structures and helper utilities to parse, create, and serialize
+//! SigMF recording metadata (`.sigmf-meta`).
+//!
+//! - **Global:** Top-level metadata about the recording.
+//! - **Captures:** Segment-specific metadata (sample rate, frequency).
+//! - **Annotations:** Time/frequency-indexed labels.
+
 #[macro_use]
 extern crate serde_derive;
 

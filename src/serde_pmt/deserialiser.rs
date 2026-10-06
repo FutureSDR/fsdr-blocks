@@ -69,46 +69,70 @@ impl<'de> serde::Deserializer<'de> for PmtDist {
         }
     }
 
-    fn deserialize_i8<V>(self, _visitor: V) -> std::prelude::v1::Result<V::Value, Self::Error>
+    fn deserialize_i8<V>(self, visitor: V) -> std::prelude::v1::Result<V::Value, Self::Error>
     where
         V: serde::de::Visitor<'de>,
     {
-        todo!()
+        match self.0 {
+            Pmt::U32(v) => visitor.visit_i8(v as i8),
+            Pmt::F32(v) => visitor.visit_i8(v as i8),
+            _ => Err(self.invalid_type(&visitor)),
+        }
     }
 
-    fn deserialize_i16<V>(self, _visitor: V) -> std::prelude::v1::Result<V::Value, Self::Error>
+    fn deserialize_i16<V>(self, visitor: V) -> std::prelude::v1::Result<V::Value, Self::Error>
     where
         V: serde::de::Visitor<'de>,
     {
-        todo!()
+        match self.0 {
+            Pmt::U32(v) => visitor.visit_i16(v as i16),
+            Pmt::F32(v) => visitor.visit_i16(v as i16),
+            _ => Err(self.invalid_type(&visitor)),
+        }
     }
 
-    fn deserialize_i32<V>(self, _visitor: V) -> std::prelude::v1::Result<V::Value, Self::Error>
+    fn deserialize_i32<V>(self, visitor: V) -> std::prelude::v1::Result<V::Value, Self::Error>
     where
         V: serde::de::Visitor<'de>,
     {
-        todo!()
+        match self.0 {
+            Pmt::U32(v) => visitor.visit_i32(v as i32),
+            Pmt::F32(v) => visitor.visit_i32(v as i32),
+            _ => Err(self.invalid_type(&visitor)),
+        }
     }
 
-    fn deserialize_i64<V>(self, _visitor: V) -> std::prelude::v1::Result<V::Value, Self::Error>
+    fn deserialize_i64<V>(self, visitor: V) -> std::prelude::v1::Result<V::Value, Self::Error>
     where
         V: serde::de::Visitor<'de>,
     {
-        todo!()
+        match self.0 {
+            Pmt::U64(v) => visitor.visit_i64(v as i64),
+            Pmt::U32(v) => visitor.visit_i64(v as i64),
+            Pmt::F64(v) => visitor.visit_i64(v as i64),
+            Pmt::F32(v) => visitor.visit_i64(v as i64),
+            _ => Err(self.invalid_type(&visitor)),
+        }
     }
 
-    fn deserialize_u8<V>(self, _visitor: V) -> std::prelude::v1::Result<V::Value, Self::Error>
+    fn deserialize_u8<V>(self, visitor: V) -> std::prelude::v1::Result<V::Value, Self::Error>
     where
         V: serde::de::Visitor<'de>,
     {
-        todo!()
+        match self.0 {
+            Pmt::U32(v) => visitor.visit_u8(v as u8),
+            _ => Err(self.invalid_type(&visitor)),
+        }
     }
 
-    fn deserialize_u16<V>(self, _visitor: V) -> std::prelude::v1::Result<V::Value, Self::Error>
+    fn deserialize_u16<V>(self, visitor: V) -> std::prelude::v1::Result<V::Value, Self::Error>
     where
         V: serde::de::Visitor<'de>,
     {
-        todo!()
+        match self.0 {
+            Pmt::U32(v) => visitor.visit_u16(v as u16),
+            _ => Err(self.invalid_type(&visitor)),
+        }
     }
 
     fn deserialize_u32<V>(self, visitor: V) -> std::prelude::v1::Result<V::Value, Self::Error>
@@ -127,36 +151,51 @@ impl<'de> serde::Deserializer<'de> for PmtDist {
     {
         match self.0 {
             Pmt::U64(v) => visitor.visit_u64(v),
+            Pmt::Usize(v) => visitor.visit_u64(v as u64),
             _ => Err(self.invalid_type(&visitor)),
         }
     }
 
-    fn deserialize_f32<V>(self, _visitor: V) -> std::prelude::v1::Result<V::Value, Self::Error>
+    fn deserialize_f32<V>(self, visitor: V) -> std::prelude::v1::Result<V::Value, Self::Error>
     where
         V: serde::de::Visitor<'de>,
     {
-        todo!()
+        match self.0 {
+            Pmt::F32(v) => visitor.visit_f32(v),
+            Pmt::F64(v) => visitor.visit_f32(v as f32),
+            _ => Err(self.invalid_type(&visitor)),
+        }
     }
 
-    fn deserialize_f64<V>(self, _visitor: V) -> std::prelude::v1::Result<V::Value, Self::Error>
+    fn deserialize_f64<V>(self, visitor: V) -> std::prelude::v1::Result<V::Value, Self::Error>
     where
         V: serde::de::Visitor<'de>,
     {
-        todo!()
+        match self.0 {
+            Pmt::F64(v) => visitor.visit_f64(v),
+            Pmt::F32(v) => visitor.visit_f64(v as f64),
+            _ => Err(self.invalid_type(&visitor)),
+        }
     }
 
-    fn deserialize_char<V>(self, _visitor: V) -> std::prelude::v1::Result<V::Value, Self::Error>
+    fn deserialize_char<V>(self, visitor: V) -> std::prelude::v1::Result<V::Value, Self::Error>
     where
         V: serde::de::Visitor<'de>,
     {
-        todo!()
+        match self.0 {
+            Pmt::String(ref s) if s.len() == 1 => visitor.visit_char(s.chars().next().unwrap()),
+            _ => Err(self.invalid_type(&visitor)),
+        }
     }
 
-    fn deserialize_str<V>(self, _visitor: V) -> std::prelude::v1::Result<V::Value, Self::Error>
+    fn deserialize_str<V>(self, visitor: V) -> std::prelude::v1::Result<V::Value, Self::Error>
     where
         V: serde::de::Visitor<'de>,
     {
-        todo!()
+        match self.0 {
+            Pmt::String(v) => visitor.visit_string(v),
+            _ => Err(self.invalid_type(&visitor)),
+        }
     }
 
     fn deserialize_string<V>(self, visitor: V) -> std::prelude::v1::Result<V::Value, Self::Error>
@@ -169,18 +208,24 @@ impl<'de> serde::Deserializer<'de> for PmtDist {
         }
     }
 
-    fn deserialize_bytes<V>(self, _visitor: V) -> std::prelude::v1::Result<V::Value, Self::Error>
+    fn deserialize_bytes<V>(self, visitor: V) -> std::prelude::v1::Result<V::Value, Self::Error>
     where
         V: serde::de::Visitor<'de>,
     {
-        todo!()
+        match self.0 {
+            Pmt::VecF32(v) => {
+                let bytes: Vec<u8> = v.into_iter().map(|f| f as u8).collect();
+                visitor.visit_byte_buf(bytes)
+            }
+            _ => Err(self.invalid_type(&visitor)),
+        }
     }
 
-    fn deserialize_byte_buf<V>(self, _visitor: V) -> std::prelude::v1::Result<V::Value, Self::Error>
+    fn deserialize_byte_buf<V>(self, visitor: V) -> std::prelude::v1::Result<V::Value, Self::Error>
     where
         V: serde::de::Visitor<'de>,
     {
-        todo!()
+        self.deserialize_bytes(visitor)
     }
 
     fn deserialize_option<V>(self, visitor: V) -> std::prelude::v1::Result<V::Value, Self::Error>
@@ -206,53 +251,71 @@ impl<'de> serde::Deserializer<'de> for PmtDist {
     fn deserialize_unit_struct<V>(
         self,
         _name: &'static str,
-        _visitor: V,
+        visitor: V,
     ) -> std::prelude::v1::Result<V::Value, Self::Error>
     where
         V: serde::de::Visitor<'de>,
     {
-        todo!()
+        self.deserialize_unit(visitor)
     }
 
     fn deserialize_newtype_struct<V>(
         self,
         _name: &'static str,
-        _visitor: V,
+        visitor: V,
     ) -> std::prelude::v1::Result<V::Value, Self::Error>
     where
         V: serde::de::Visitor<'de>,
     {
-        todo!()
+        visitor.visit_newtype_struct(self)
     }
 
-    fn deserialize_seq<V>(self, _visitor: V) -> std::prelude::v1::Result<V::Value, Self::Error>
+    fn deserialize_seq<V>(self, visitor: V) -> std::prelude::v1::Result<V::Value, Self::Error>
     where
         V: serde::de::Visitor<'de>,
     {
-        todo!()
+        match self.0 {
+            Pmt::VecF32(v) => {
+                struct SeqVecF32(std::vec::IntoIter<f32>);
+                impl<'de> serde::de::SeqAccess<'de> for SeqVecF32 {
+                    type Error = Error;
+                    fn next_element_seed<T>(&mut self, seed: T) -> Result<Option<T::Value>>
+                    where
+                        T: serde::de::DeserializeSeed<'de>,
+                    {
+                        match self.0.next() {
+                            Some(val) => seed.deserialize(PmtDist(Pmt::F32(val))).map(Some),
+                            None => Ok(None),
+                        }
+                    }
+                }
+                visitor.visit_seq(SeqVecF32(v.into_iter()))
+            }
+            _ => Err(self.invalid_type(&visitor)),
+        }
     }
 
     fn deserialize_tuple<V>(
         self,
         _len: usize,
-        _visitor: V,
+        visitor: V,
     ) -> std::prelude::v1::Result<V::Value, Self::Error>
     where
         V: serde::de::Visitor<'de>,
     {
-        todo!()
+        self.deserialize_seq(visitor)
     }
 
     fn deserialize_tuple_struct<V>(
         self,
         _name: &'static str,
         _len: usize,
-        _visitor: V,
+        visitor: V,
     ) -> std::prelude::v1::Result<V::Value, Self::Error>
     where
         V: serde::de::Visitor<'de>,
     {
-        todo!()
+        self.deserialize_seq(visitor)
     }
 
     fn deserialize_map<V>(self, visitor: V) -> std::prelude::v1::Result<V::Value, Self::Error>
@@ -269,44 +332,92 @@ impl<'de> serde::Deserializer<'de> for PmtDist {
         self,
         _name: &'static str,
         _fields: &'static [&'static str],
-        _visitor: V,
+        visitor: V,
     ) -> std::prelude::v1::Result<V::Value, Self::Error>
     where
         V: serde::de::Visitor<'de>,
     {
-        todo!()
+        self.deserialize_map(visitor)
     }
 
     fn deserialize_enum<V>(
         self,
         _name: &'static str,
         _variants: &'static [&'static str],
-        _visitor: V,
+        visitor: V,
     ) -> std::prelude::v1::Result<V::Value, Self::Error>
     where
         V: serde::de::Visitor<'de>,
     {
-        todo!()
+        match self.0 {
+            Pmt::String(ref s) => {
+                struct EnumDeserializer(String);
+                impl<'de> serde::de::EnumAccess<'de> for EnumDeserializer {
+                    type Error = Error;
+                    type Variant = VariantDeserializer;
+                    fn variant_seed<T>(self, seed: T) -> Result<(T::Value, Self::Variant)>
+                    where
+                        T: serde::de::DeserializeSeed<'de>,
+                    {
+                        let val = seed.deserialize(BorrowedCowStrDeserializer::new(
+                            std::borrow::Cow::Owned(self.0),
+                        ))?;
+                        Ok((val, VariantDeserializer))
+                    }
+                }
+                struct VariantDeserializer;
+                impl<'de> serde::de::VariantAccess<'de> for VariantDeserializer {
+                    type Error = Error;
+                    fn unit_variant(self) -> Result<()> {
+                        Ok(())
+                    }
+                    fn newtype_variant_seed<T>(self, _seed: T) -> Result<T::Value>
+                    where
+                        T: serde::de::DeserializeSeed<'de>,
+                    {
+                        Err(serde::de::Error::custom("unexpected newtype variant"))
+                    }
+                    fn tuple_variant<V>(self, _len: usize, _visitor: V) -> Result<V::Value>
+                    where
+                        V: serde::de::Visitor<'de>,
+                    {
+                        Err(serde::de::Error::custom("unexpected tuple variant"))
+                    }
+                    fn struct_variant<V>(
+                        self,
+                        _fields: &'static [&'static str],
+                        _visitor: V,
+                    ) -> Result<V::Value>
+                    where
+                        V: serde::de::Visitor<'de>,
+                    {
+                        Err(serde::de::Error::custom("unexpected struct variant"))
+                    }
+                }
+                visitor.visit_enum(EnumDeserializer(s.clone()))
+            }
+            _ => Err(self.invalid_type(&visitor)),
+        }
     }
 
     fn deserialize_identifier<V>(
         self,
-        _visitor: V,
+        visitor: V,
     ) -> std::prelude::v1::Result<V::Value, Self::Error>
     where
         V: serde::de::Visitor<'de>,
     {
-        todo!()
+        self.deserialize_str(visitor)
     }
 
     fn deserialize_ignored_any<V>(
         self,
-        _visitor: V,
+        visitor: V,
     ) -> std::prelude::v1::Result<V::Value, Self::Error>
     where
         V: serde::de::Visitor<'de>,
     {
-        todo!()
+        visitor.visit_unit()
     }
 }
 

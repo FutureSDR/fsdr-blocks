@@ -39,25 +39,25 @@ fn main() -> Result<()> {
     loop {
         // Reference power of 1.0 is the power level we want to achieve
         println!("Setting reference power to 1.0");
-        Runtime::block_on(handle.call(agc, "reference_power", Pmt::F32(1.0)))?;
+        block_on(handle.call(agc, "reference_power", Pmt::F32(1.0)))?;
 
         // A high max gain allows to amplify a signal
         println!("Setting Max Gain to 65536.0");
-        Runtime::block_on(handle.call(agc, "max_gain", Pmt::F32(65536.0)))?;
+        block_on(handle.call(agc, "max_gain", Pmt::F32(65536.0)))?;
         sleep(Duration::from_secs(5));
 
         // Setting a gain lock prevents gain changes from happening
         println!("Setting gain lock for 5s");
-        Runtime::block_on(handle.call(agc, "gain_lock", Pmt::Bool(true)))?;
+        block_on(handle.call(agc, "gain_lock", Pmt::Bool(true)))?;
 
         // Audio should get quiet faster, but gain is still locked here. It will be released after 5 seconds.
         println!("Setting reference power to 0.2");
-        Runtime::block_on(handle.call(agc, "reference_power", Pmt::F32(0.2)))?;
+        block_on(handle.call(agc, "reference_power", Pmt::F32(0.2)))?;
         sleep(Duration::from_secs(5));
 
         // Gain lock released! Audio should get more quiet here for 10 seconds
         println!("Releasing gain lock");
-        Runtime::block_on(handle.call(agc, "gain_lock", Pmt::Bool(false)))?;
+        block_on(handle.call(agc, "gain_lock", Pmt::Bool(false)))?;
         sleep(Duration::from_secs(10));
     }
 }

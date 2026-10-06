@@ -2,9 +2,7 @@ use fsdr_blocks::cw::baseband_to_cw::BaseBandToCWBuilder;
 use fsdr_blocks::cw::shared::CWAlphabet::*;
 use fsdr_blocks::cw::shared::{CWAlphabet, char_to_baseband};
 use futuresdr::blocks::{VectorSink, VectorSource};
-use futuresdr::runtime::Result;
-use futuresdr::runtime::macros::connect;
-use futuresdr::runtime::{Flowgraph, Runtime};
+use futuresdr::prelude::*;
 
 // cargo nextest run test_baseband_to_cw --no-capture
 #[test]
@@ -34,8 +32,8 @@ fn test_baseband_to_cw() -> Result<()> {
 
     let fg = Runtime::new().run(fg)?;
 
-    let binding = vector_snk.get(&fg)?;
-    let received = binding.items();
+    let snk = fg.block(&vector_snk)?;
+    let received = snk.items();
 
     println!(
         "CW-Alphabet Vector Length: {}, Content: {:?}",

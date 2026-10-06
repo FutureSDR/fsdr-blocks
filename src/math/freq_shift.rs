@@ -3,8 +3,8 @@ use futuresdr::blocks::signal_source::NCO;
 use futuresdr::num_complex::Complex32;
 use futuresdr::runtime::dev::prelude::*;
 
-/// This blocks shift the signal in the frequency domain based on the [`NCO`] implementation.
-/// Currently implemented only for float and [`Complex32`]
+/// This block shifts the signal in the frequency domain based on the [`NCO`] implementation.
+/// Implemented for float (`f32`) and [`Complex32`].
 ///
 /// # Usage
 ///
@@ -16,11 +16,14 @@ use futuresdr::runtime::dev::prelude::*;
 /// let blk = FrequencyShifter::<Complex32>::new(freq as f32, sample_rate as f32);
 /// ```
 #[derive(Block)]
+#[message_inputs(set_frequency)]
 pub struct FrequencyShifter<
-    A: Send + Sync + Default + Clone + std::fmt::Debug + 'static,
+    A: Send + Sync + Default + Clone + Copy + std::fmt::Debug + 'static,
     I: CpuBufferReader<Item = A> = DefaultCpuReader<A>,
     O: CpuBufferWriter<Item = A> = DefaultCpuWriter<A>,
 > {
+    freq: f32,
+    sample_rate: f32,
     #[input]
     input: I,
     #[output]
@@ -31,7 +34,7 @@ pub struct FrequencyShifter<
 
 impl<A, I, O> FrequencyShifter<A, I, O>
 where
-    A: Send + Sync + Default + Clone + std::fmt::Debug + 'static + Copy,
+    A: Send + Sync + Default + Clone + Copy + std::fmt::Debug + 'static,
     I: CpuBufferReader<Item = A>,
     O: CpuBufferWriter<Item = A>,
 {
@@ -40,12 +43,45 @@ where
         let phase_inc = 2.0 * core::f32::consts::PI * frequency / sample_rate;
         let nco = NCO::new(0.0f32, phase_inc);
         Self {
+            freq: frequency,
+            sample_rate,
             input: I::default(),
             output: O::default(),
             nco,
             phase_inc: FixedPointPhase::new(phase_inc),
         }
     }
+
+    async fn set_frequency(
+        &mut self,
+        _io: &mut WorkIo,
+        _mio: &mut MessageOutputs,
+        _meta: &BlockMeta,
+        p: Pmt,
+    ) -> Result<Pmt> {
+        let freq = match p {
+            Pmt::F32(f) => f,
+            Pmt::F64(f) => f as f32,
+            Pmt::U32(f) => f as f32,
+            Pmt::U64(f) => f as f32,
+            _ => return Ok(Pmt::InvalidValue),
+        };
+        self.freq = freq;
+        let rad_inc = 2.0 * core::f32::consts::PI * freq / self.sample_rate;
+        self.phase_inc = FixedPointPhase::new(rad_inc);
+        Ok(Pmt::Ok)
+    }
+}
+
+#[inline(always)]
+fn fast_complex_mul(a: Complex32, b: Complex32) -> Complex32 {
+    let re = f32::algebraic_sub(
+        f32::algebraic_mul(a.re, b.re),
+        f32::algebraic_mul(a.im, b.im),
+    );
+    let im = a.re.mul_add(b.im, a.im.algebraic_mul(b.re));
+
+    Complex32::new(re, im)
 }
 
 #[doc(hidden)]
@@ -58,7 +94,7 @@ where
         &mut self,
         io: &mut WorkIo,
         _mio: &mut MessageOutputs,
-        _meta: &mut BlockMeta,
+        _meta: &BlockMeta,
     ) -> Result<()> {
         let m = {
             let i = self.input.slice();
@@ -67,7 +103,8 @@ where
             let m = std::cmp::min(i.len(), o.len());
             if m > 0 {
                 for (v, r) in i[..m].iter().zip(o[..m].iter_mut()) {
-                    *r = (*v) * self.nco.phase.cos();
+                    let cos_val = self.nco.phase.cos();
+                    *r = f32::algebraic_mul(*v, cos_val);
                     self.nco.step();
                 }
             }
@@ -97,7 +134,7 @@ where
         &mut self,
         io: &mut WorkIo,
         _mio: &mut MessageOutputs,
-        _meta: &mut BlockMeta,
+        _meta: &BlockMeta,
     ) -> Result<()> {
         let m = {
             let i = self.input.slice();
@@ -107,9 +144,23 @@ where
             if m > 0 {
                 let rotation = Complex32::new(self.phase_inc.cos(), self.phase_inc.sin());
                 let mut current_phasor = Complex32::new(self.nco.phase.cos(), self.nco.phase.sin());
+                let mut count = 0usize;
+
                 for (v, r) in i[..m].iter().zip(o[..m].iter_mut()) {
-                    *r = (*v) * current_phasor;
-                    current_phasor *= rotation;
+                    *r = fast_complex_mul(*v, current_phasor);
+                    current_phasor = fast_complex_mul(current_phasor, rotation);
+                    count += 1;
+                    if count & 0xFF == 0 {
+                        let norm_sq = current_phasor.re.mul_add(
+                            current_phasor.re,
+                            current_phasor.im.algebraic_mul(current_phasor.im),
+                        );
+                        if f32::algebraic_sub(norm_sq, 1.0).abs() > 1e-4 {
+                            let inv_norm = f32::algebraic_div(1.0, norm_sq.sqrt());
+                            current_phasor.re = f32::algebraic_mul(current_phasor.re, inv_norm);
+                            current_phasor.im = f32::algebraic_mul(current_phasor.im, inv_norm);
+                        }
+                    }
                 }
                 self.nco.steps(m as i32);
             }

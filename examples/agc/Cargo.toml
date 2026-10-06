@@ -8,5 +8,5 @@ edition = "2024"
 #path = "main"
 
 [dependencies]
-futuresdr = { version = "0.0.40", features = ["audio"] }
+futuresdr = { workspace = true, features = ["audio"] }
 fsdr-blocks = { path = "../../" }

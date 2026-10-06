@@ -54,7 +54,7 @@ impl<T: Send + Sync + Copy + 'static, I: CpuBufferReader<Item = T>> Kernel for C
         &mut self,
         io: &mut WorkIo,
         _mio: &mut MessageOutputs,
-        _meta: &mut BlockMeta,
+        _meta: &BlockMeta,
     ) -> Result<()> {
         let i = self.input.slice();
 
@@ -62,13 +62,13 @@ impl<T: Send + Sync + Copy + 'static, I: CpuBufferReader<Item = T>> Kernel for C
         if i_len > 0 {
             match self.sender.try_send(i.into()) {
                 Ok(_) => {
-                    //info!("sent data...");
+                    self.input.consume(i_len);
                 }
-                Err(_err) => {
-                    //info!("{}", err.to_string());
+                Err(crossbeam_channel::TrySendError::Full(_)) => {}
+                Err(crossbeam_channel::TrySendError::Disconnected(_)) => {
+                    io.finished = true;
                 }
             }
-            self.input.consume(i_len);
         }
 
         if self.input.finished() {

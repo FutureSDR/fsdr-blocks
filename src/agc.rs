@@ -1,3 +1,4 @@
+use futuresdr::futuredsp::num_traits::ToPrimitive;
 use futuresdr::num_complex::ComplexFloat;
 use futuresdr::runtime::dev::prelude::*;
 
@@ -5,7 +6,7 @@ use futuresdr::runtime::dev::prelude::*;
 #[derive(Block)]
 #[message_inputs(auto_lock, gain_lock, max_gain, adjustment_rate, reference_power)]
 pub struct Agc<
-    T: Send + Sync + ComplexFloat + Default + std::fmt::Debug + 'static,
+    T: Send + Sync + ComplexFloat<Real: ToPrimitive> + Default + std::fmt::Debug + Copy + 'static,
     I: CpuBufferReader<Item = T> = DefaultCpuReader<T>,
     O: CpuBufferWriter<Item = T> = DefaultCpuWriter<T>,
 > {
@@ -31,7 +32,7 @@ pub struct Agc<
 
 impl<T, I, O> Agc<T, I, O>
 where
-    T: Send + Sync + ComplexFloat + Default + std::fmt::Debug + 'static,
+    T: Send + Sync + ComplexFloat<Real: ToPrimitive> + Default + std::fmt::Debug + Copy + 'static,
     I: CpuBufferReader<Item = T>,
     O: CpuBufferWriter<Item = T>,
 {
@@ -45,10 +46,7 @@ where
         gain_lock: bool,
         auto_lock: bool,
     ) -> Self {
-        assert!(max_gain >= 0.0);
-        assert!(squelch >= 0.0);
-
-        Agc {
+        Self {
             input: I::default(),
             output: O::default(),
             squelch,
@@ -65,7 +63,7 @@ where
         &mut self,
         _io: &mut WorkIo,
         _mio: &mut MessageOutputs,
-        _meta: &mut BlockMeta,
+        _meta: &BlockMeta,
         p: Pmt,
     ) -> Result<Pmt> {
         if let Pmt::Bool(l) = p {
@@ -80,7 +78,7 @@ where
         &mut self,
         _io: &mut WorkIo,
         _mio: &mut MessageOutputs,
-        _meta: &mut BlockMeta,
+        _meta: &BlockMeta,
         p: Pmt,
     ) -> Result<Pmt> {
         if let Pmt::Bool(l) = p {
@@ -95,7 +93,7 @@ where
         &mut self,
         _io: &mut WorkIo,
         _mio: &mut MessageOutputs,
-        _meta: &mut BlockMeta,
+        _meta: &BlockMeta,
         p: Pmt,
     ) -> Result<Pmt> {
         if let Pmt::F32(r) = p {
@@ -110,7 +108,7 @@ where
         &mut self,
         _io: &mut WorkIo,
         _mio: &mut MessageOutputs,
-        _meta: &mut BlockMeta,
+        _meta: &BlockMeta,
         p: Pmt,
     ) -> Result<Pmt> {
         if let Pmt::F32(r) = p {
@@ -125,7 +123,7 @@ where
         &mut self,
         _io: &mut WorkIo,
         _mio: &mut MessageOutputs,
-        _meta: &mut BlockMeta,
+        _meta: &BlockMeta,
         p: Pmt,
     ) -> Result<Pmt> {
         if let Pmt::F32(r) = p {
@@ -140,7 +138,7 @@ where
 #[doc(hidden)]
 impl<T, I, O> Kernel for Agc<T, I, O>
 where
-    T: Send + Sync + ComplexFloat + Default + std::fmt::Debug + Copy + 'static,
+    T: Send + Sync + ComplexFloat<Real: ToPrimitive> + Default + std::fmt::Debug + Copy + 'static,
     I: CpuBufferReader<Item = T>,
     O: CpuBufferWriter<Item = T>,
 {
@@ -148,7 +146,7 @@ where
         &mut self,
         io: &mut WorkIo,
         _mio: &mut MessageOutputs,
-        _meta: &mut BlockMeta,
+        _meta: &BlockMeta,
     ) -> Result<()> {
         let m = {
             let i = self.input.slice();
@@ -157,17 +155,29 @@ where
             let m = std::cmp::min(i.len(), o.len());
             if m > 0 {
                 let squelch = self.squelch;
+                let max_gain = self.max_gain;
                 let mut gain = self.gain;
                 let mut gain_lock = self.gain_lock;
                 let auto_lock = self.auto_lock;
                 let reference_power = self.reference_power;
                 let adjustment_rate = self.adjustment_rate;
 
+                let dynamic_adjustment_rate = if adjustment_rate > 0.0 {
+                    adjustment_rate
+                } else {
+                    0.0001
+                };
+
                 for (src, dst) in i[..m].iter().zip(o[..m].iter_mut()) {
-                    let input_power = src.to_f32().unwrap().powi(2);
+                    let re_in = src.re().to_f32().unwrap_or(0.0);
+                    let im_in = src.im().to_f32().unwrap_or(0.0);
+                    let input_power = re_in.mul_add(re_in, im_in.algebraic_mul(im_in));
+
                     if input_power > squelch {
                         let output = (*src) * T::from(gain).unwrap();
-                        let output_power = output.to_f32().unwrap().powi(2);
+                        let re_out = output.re().to_f32().unwrap_or(0.0);
+                        let im_out = output.im().to_f32().unwrap_or(0.0);
+                        let output_power = re_out.mul_add(re_out, im_out.algebraic_mul(im_out));
 
                         if auto_lock {
                             if input_power > reference_power {
@@ -180,14 +190,10 @@ where
                         }
 
                         if !gain_lock {
-                            let dynamic_adjustment_rate = if adjustment_rate > 0.0 {
-                                adjustment_rate
-                            } else {
-                                0.0001
-                            };
-                            gain *= 1.0
-                                + (reference_power / output_power).log10()
-                                    * dynamic_adjustment_rate;
+                            let err = f32::algebraic_sub(reference_power, output_power);
+                            gain = err
+                                .mul_add(dynamic_adjustment_rate, gain)
+                                .clamp(0.0, max_gain);
                         }
                         *dst = output;
                     } else {
@@ -233,7 +239,7 @@ pub struct AgcBuilder<T> {
 
 impl<T> AgcBuilder<T>
 where
-    T: Send + Sync + ComplexFloat + Default + std::fmt::Debug + 'static,
+    T: Send + Sync + ComplexFloat<Real: ToPrimitive> + Default + std::fmt::Debug + Copy + 'static,
 {
     /// Create builder w/ default parameters
     ///
@@ -276,6 +282,17 @@ where
         self
     }
 
+    /// Set initial gain value
+    pub fn gain(mut self, gain: f32) -> AgcBuilder<T> {
+        self.gain = gain;
+        self
+    }
+
+    /// Set initial gain value (alias for gain)
+    pub fn initial_gain(self, gain: f32) -> AgcBuilder<T> {
+        self.gain(gain)
+    }
+
     /// Targeted power level
     pub fn reference_power(mut self, reference_power: f32) -> AgcBuilder<T> {
         self.reference_power = reference_power;
@@ -308,8 +325,8 @@ where
     }
 }
 
-impl<T: Send + Sync + ComplexFloat + Default + std::fmt::Debug + 'static> Default
-    for AgcBuilder<T>
+impl<T: Send + Sync + ComplexFloat<Real: ToPrimitive> + Default + std::fmt::Debug + Copy + 'static>
+    Default for AgcBuilder<T>
 {
     fn default() -> Self {
         Self::new()

@@ -10,7 +10,7 @@ use futuresdr::runtime::dev::prelude::*;
 /// ```
 #[derive(Block)]
 pub struct Deinterleave<
-    A: Send + Sync + Default + Clone + std::fmt::Debug + 'static + Copy,
+    A: Send + Sync + Default + Copy + std::fmt::Debug + 'static,
     I: CpuBufferReader<Item = A> = DefaultCpuReader<A>,
     O0: CpuBufferWriter<Item = A> = DefaultCpuWriter<A>,
     O1: CpuBufferWriter<Item = A> = DefaultCpuWriter<A>,
@@ -26,7 +26,7 @@ pub struct Deinterleave<
 
 impl<A, I, O0, O1> Deinterleave<A, I, O0, O1>
 where
-    A: Send + Sync + Default + Clone + std::fmt::Debug + 'static + Copy,
+    A: Send + Sync + Default + Copy + std::fmt::Debug + 'static,
     I: CpuBufferReader<Item = A>,
     O0: CpuBufferWriter<Item = A>,
     O1: CpuBufferWriter<Item = A>,
@@ -43,7 +43,7 @@ where
 
 impl<A, I, O0, O1> Default for Deinterleave<A, I, O0, O1>
 where
-    A: Send + Sync + Default + Clone + std::fmt::Debug + 'static + Copy,
+    A: Send + Sync + Default + Copy + std::fmt::Debug + 'static,
     I: CpuBufferReader<Item = A>,
     O0: CpuBufferWriter<Item = A>,
     O1: CpuBufferWriter<Item = A>,
@@ -56,7 +56,7 @@ where
 #[doc(hidden)]
 impl<A, I, O0, O1> Kernel for Deinterleave<A, I, O0, O1>
 where
-    A: Send + Sync + Default + Clone + std::fmt::Debug + 'static + Copy,
+    A: Send + Sync + Default + Copy + std::fmt::Debug + 'static,
     I: CpuBufferReader<Item = A>,
     O0: CpuBufferWriter<Item = A>,
     O1: CpuBufferWriter<Item = A>,
@@ -65,7 +65,7 @@ where
         &mut self,
         io: &mut WorkIo,
         _mio: &mut MessageOutputs,
-        _meta: &mut BlockMeta,
+        _meta: &BlockMeta,
     ) -> Result<()> {
         let (m, m0, m1) = {
             let i0 = self.input.slice();
@@ -75,27 +75,45 @@ where
             let mut m0 = 0;
             let mut m1 = 0;
 
-            let mut it0 = o0.iter_mut();
-            let mut it1 = o1.iter_mut();
+            if !i0.is_empty() {
+                let mut i_idx = 0;
 
-            for x in i0.iter() {
-                if self.first {
-                    if let Some(d) = it0.next() {
-                        *d = *x;
-                        m0 += 1;
-                    } else {
-                        break;
-                    }
-                } else {
-                    if let Some(d) = it1.next() {
-                        *d = *x;
-                        m1 += 1;
-                    } else {
-                        break;
-                    }
+                if !self.first && i_idx < i0.len() && m1 < o1.len() {
+                    o1[m1] = i0[i_idx];
+                    m1 += 1;
+                    i_idx += 1;
+                    self.first = true;
                 }
-                self.first = !self.first;
+
+                let pairs = std::cmp::min(
+                    (i0.len() - i_idx) / 2,
+                    std::cmp::min(o0.len() - m0, o1.len() - m1),
+                );
+                if pairs > 0 {
+                    let in_chunks = &i0[i_idx..i_idx + pairs * 2];
+                    let out0_slice = &mut o0[m0..m0 + pairs];
+                    let out1_slice = &mut o1[m1..m1 + pairs];
+
+                    #[allow(clippy::chunks_exact_to_as_chunks)]
+                    for (chunk, (d0, d1)) in in_chunks
+                        .chunks_exact(2)
+                        .zip(out0_slice.iter_mut().zip(out1_slice.iter_mut()))
+                    {
+                        *d0 = chunk[0];
+                        *d1 = chunk[1];
+                    }
+                    m0 += pairs;
+                    m1 += pairs;
+                    i_idx += pairs * 2;
+                }
+
+                if i_idx < i0.len() && self.first && m0 < o0.len() {
+                    o0[m0] = i0[i_idx];
+                    m0 += 1;
+                    self.first = false;
+                }
             }
+
             (m0 + m1, m0, m1)
         };
 

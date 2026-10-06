@@ -1,13 +1,8 @@
 use fsdr_blocks::sigmf::{BytesConveter, SigMFSink, SigMFSourceBuilder};
-use futuresdr::{
-    blocks::{VectorSink, VectorSource},
-    runtime::Result,
-    runtime::macros::connect,
-    runtime::{Flowgraph, Runtime},
-};
-
+use futuresdr::blocks::{VectorSink, VectorSource};
 use futuresdr::futures::io::BufReader;
 use futuresdr::futures::io::Cursor;
+use futuresdr::prelude::*;
 use sigmf::{Annotation, DatasetFormat, DescriptionBuilder};
 
 /// Write the data into a SigMF file,
@@ -17,6 +12,7 @@ fn sigmf_write_read<T>(datatype: DatasetFormat, data: Vec<T>) -> Result<()>
 where
     T: Sized
         + 'static
+        + Copy
         + Clone
         + std::marker::Send
         + std::marker::Sync
@@ -38,22 +34,22 @@ where
         src1 > snk1;
     );
     let fg = Runtime::new().run(fg)?;
-    let snk1_guard = snk1.get(&fg)?;
-    let desc = snk1_guard.description.build()?;
-    let data_file = snk1_guard.writer.to_owned().into_inner();
+    let snk1 = fg.block(&snk1)?;
+    let desc = snk1.description.build()?;
     let mut fg = Flowgraph::new();
+    let data_file = snk1.writer.to_owned().into_inner();
     let data_file = futuresdr::futures::io::Cursor::new(data_file);
-    let src2 = futuresdr::futures::executor::block_on(
-        SigMFSourceBuilder::with_data_and_description(data_file, desc).build::<T>(),
-    )?;
+    let src2 =
+        block_on(SigMFSourceBuilder::with_data_and_description(data_file, desc).build::<T>())?;
     let snk2 = VectorSink::<T>::new(1024);
     connect!(fg,
         src2 > snk2;
     );
     let fg = Runtime::new().run(fg)?;
-    let snk2 = snk2.get(&fg)?.items().clone();
-    assert_eq!(data.len(), snk2.len());
-    for (o, i) in data.iter().zip(snk2) {
+    let snk2 = fg.block(&snk2)?;
+    let snk2_items = snk2.items().to_vec();
+    assert_eq!(data.len(), snk2_items.len());
+    for (o, i) in data.iter().zip(snk2_items) {
         assert_eq!(o, &i);
     }
     Ok(())
@@ -100,9 +96,8 @@ fn sigmf_read_write_annotation() -> Result<()> {
 
     let actual_file = Cursor::new(data);
     let actual_file = BufReader::new(actual_file);
-    let src1 = futuresdr::futures::executor::block_on(
-        SigMFSourceBuilder::with_data_and_description(actual_file, desc).build::<u8>(),
-    )?;
+    let src1 =
+        block_on(SigMFSourceBuilder::with_data_and_description(actual_file, desc).build::<u8>())?;
 
     let data_file_content: Vec<u8> = vec![];
     let meta_file_content: Vec<u8> = vec![];
@@ -119,29 +114,10 @@ fn sigmf_read_write_annotation() -> Result<()> {
     let fg = Runtime::new().run(fg)?;
 
     // Time to verify
-    let tgt_desc = snk1.get(&fg)?.description.build()?;
+    let snk1 = fg.block(&snk1)?;
+    let tgt_desc = snk1.description.build()?;
     let annotations = tgt_desc.annotations()?;
     assert_eq!(2, annotations.len());
-    let annot1 = annotations
-        .first()
-        .expect("the annotation should have been recreated");
-    assert_eq!(
-        "the comment",
-        annot1
-            .comment
-            .as_ref()
-            .expect("comment should have been copied")
-            .as_str()
-    );
-    assert_eq!(
-        "abc",
-        annot1
-            .label
-            .as_ref()
-            .expect("label should have been copied")
-            .as_str()
-    );
-
     let annot1 = annotations
         .first()
         .expect("the annotation should have been recreated");

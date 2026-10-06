@@ -147,14 +147,44 @@ fn test_pmt_sigmf_annot() -> Result<()> {
 
 #[test]
 fn test_sigmf_annot_pmt() -> Result<()> {
-    let mut annot = sigmf::Annotation {
+    let annot = sigmf::Annotation {
         sample_start: Some(0),
         ..Default::default()
     };
-    annot.sample_start = Some(0);
 
     let mut value = HashMap::new();
     value.insert("core:sample_start".to_string(), Pmt::U64(0));
     assert_eq!(annot, from_pmt(Pmt::MapStrPmt(value))?);
     Ok(())
+}
+
+#[test]
+fn test_numeric_from_pmt_roundtrips() -> Result<()> {
+    // f32 & f64
+    let f: f32 = from_pmt(Pmt::F32(12.34))?;
+    assert!((f - 12.34).abs() < 1e-5);
+    let d: f64 = from_pmt(Pmt::F64(56.789))?;
+    assert!((d - 56.789).abs() < 1e-9);
+
+    // Integers
+    let i: i16 = from_pmt(Pmt::F32(42.0))?;
+    assert_eq!(i, 42);
+    let u: u8 = from_pmt(Pmt::U32(250))?;
+    assert_eq!(u, 250);
+    let u16_val: u16 = from_pmt(Pmt::U32(1000))?;
+    assert_eq!(u16_val, 1000);
+
+    Ok(())
+}
+
+#[test]
+fn test_unsupported_pmt_error_handling() {
+    #[derive(serde::Deserialize, Debug)]
+    struct ComplexStruct {
+        _unsupported_seq: Vec<i32>,
+    }
+
+    let pmt = Pmt::Null;
+    let res: fsdr_blocks::serde_pmt::error::Result<ComplexStruct> = from_pmt(pmt);
+    assert!(res.is_err());
 }
