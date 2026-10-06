@@ -34,8 +34,13 @@ where
         accuracy: usize, // 100 = 100% accuracy = How accurate the timeslots for symbols and between symbols have to be kept
         samples_per_dot: usize,
     ) -> Self {
-        let tolerance_per_dot =
-            (samples_per_dot as f32 - ((accuracy as f32 / 100.) * samples_per_dot as f32)) as usize;
+        let tolerance_per_dot = f32::algebraic_sub(
+            samples_per_dot as f32,
+            f32::algebraic_mul(
+                f32::algebraic_div(accuracy as f32, 100.0),
+                samples_per_dot as f32,
+            ),
+        ) as usize;
         let dot_range = samples_per_dot - tolerance_per_dot..=samples_per_dot + tolerance_per_dot;
         let dash_range =
             3 * samples_per_dot - tolerance_per_dot..=3 * samples_per_dot + tolerance_per_dot;

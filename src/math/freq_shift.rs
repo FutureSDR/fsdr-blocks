@@ -75,17 +75,13 @@ where
 
 #[inline(always)]
 fn fast_complex_mul(a: Complex32, b: Complex32) -> Complex32 {
-    unsafe {
-        let re_re = core::intrinsics::fmul_fast(a.re, b.re);
-        let im_im = core::intrinsics::fmul_fast(a.im, b.im);
-        let re_im = core::intrinsics::fmul_fast(a.re, b.im);
-        let im_re = core::intrinsics::fmul_fast(a.im, b.re);
+    let re = f32::algebraic_sub(
+        f32::algebraic_mul(a.re, b.re),
+        f32::algebraic_mul(a.im, b.im),
+    );
+    let im = a.re.mul_add(b.im, a.im.algebraic_mul(b.re));
 
-        let re = core::intrinsics::fsub_fast(re_re, im_im);
-        let im = core::intrinsics::fadd_fast(re_im, im_re);
-
-        Complex32::new(re, im)
-    }
+    Complex32::new(re, im)
 }
 
 #[doc(hidden)]
@@ -108,7 +104,7 @@ where
             if m > 0 {
                 for (v, r) in i[..m].iter().zip(o[..m].iter_mut()) {
                     let cos_val = self.nco.phase.cos();
-                    *r = unsafe { core::intrinsics::fmul_fast(*v, cos_val) };
+                    *r = f32::algebraic_mul(*v, cos_val);
                     self.nco.step();
                 }
             }
@@ -155,14 +151,14 @@ where
                     current_phasor = fast_complex_mul(current_phasor, rotation);
                     count += 1;
                     if count & 0xFF == 0 {
-                        let norm_sq = current_phasor.re * current_phasor.re
-                            + current_phasor.im * current_phasor.im;
-                        if (norm_sq - 1.0).abs() > 1e-4 {
-                            let inv_norm = 1.0 / norm_sq.sqrt();
-                            current_phasor.re =
-                                unsafe { core::intrinsics::fmul_fast(current_phasor.re, inv_norm) };
-                            current_phasor.im =
-                                unsafe { core::intrinsics::fmul_fast(current_phasor.im, inv_norm) };
+                        let norm_sq = current_phasor.re.mul_add(
+                            current_phasor.re,
+                            current_phasor.im.algebraic_mul(current_phasor.im),
+                        );
+                        if f32::algebraic_sub(norm_sq, 1.0).abs() > 1e-4 {
+                            let inv_norm = f32::algebraic_div(1.0, norm_sq.sqrt());
+                            current_phasor.re = f32::algebraic_mul(current_phasor.re, inv_norm);
+                            current_phasor.im = f32::algebraic_mul(current_phasor.im, inv_norm);
                         }
                     }
                 }

@@ -171,13 +171,13 @@ where
                 for (src, dst) in i[..m].iter().zip(o[..m].iter_mut()) {
                     let re_in = src.re().to_f32().unwrap_or(0.0);
                     let im_in = src.im().to_f32().unwrap_or(0.0);
-                    let input_power = re_in * re_in + im_in * im_in;
+                    let input_power = re_in.mul_add(re_in, im_in.algebraic_mul(im_in));
 
                     if input_power > squelch {
                         let output = (*src) * T::from(gain).unwrap();
                         let re_out = output.re().to_f32().unwrap_or(0.0);
                         let im_out = output.im().to_f32().unwrap_or(0.0);
-                        let output_power = re_out * re_out + im_out * im_out;
+                        let output_power = re_out.mul_add(re_out, im_out.algebraic_mul(im_out));
 
                         if auto_lock {
                             if input_power > reference_power {
@@ -190,14 +190,10 @@ where
                         }
 
                         if !gain_lock {
-                            let err = unsafe {
-                                core::intrinsics::fsub_fast(reference_power, output_power)
-                            };
-                            let step = unsafe {
-                                core::intrinsics::fmul_fast(err, dynamic_adjustment_rate)
-                            };
-                            gain = unsafe { core::intrinsics::fadd_fast(gain, step) };
-                            gain = gain.clamp(0.0, max_gain);
+                            let err = f32::algebraic_sub(reference_power, output_power);
+                            gain = err
+                                .mul_add(dynamic_adjustment_rate, gain)
+                                .clamp(0.0, max_gain);
                         }
                         *dst = output;
                     } else {

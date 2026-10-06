@@ -120,18 +120,18 @@ macro_rules! impl_scaled_converter {
 }
 
 // Signed integer <-> f32 conversions (zero-centered at 0.0, GNU Radio standard)
-impl_scaled_converter!(i8, f32, |i| unsafe {
-    core::intrinsics::fmul_fast(*i as f32, 1.0 / (i8::MAX as f32))
+impl_scaled_converter!(i8, f32, |i| {
+    f32::algebraic_mul(*i as f32, 1.0 / (i8::MAX as f32))
 });
-impl_scaled_converter!(i16, f32, |i| unsafe {
-    core::intrinsics::fmul_fast(*i as f32, 1.0 / (i16::MAX as f32))
+impl_scaled_converter!(i16, f32, |i| {
+    f32::algebraic_mul(*i as f32, 1.0 / (i16::MAX as f32))
 });
-impl_scaled_converter!(i32, f32, |i| unsafe {
-    core::intrinsics::fmul_fast(*i as f32, 1.0 / (i32::MAX as f32))
+impl_scaled_converter!(i32, f32, |i| {
+    f32::algebraic_mul(*i as f32, 1.0 / (i32::MAX as f32))
 });
 
 impl_scaled_converter!(f32, i8, |i| {
-    let scaled = unsafe { core::intrinsics::fmul_fast(*i, i8::MAX as f32) };
+    let scaled = f32::algebraic_mul(*i, i8::MAX as f32);
     scaled.round().clamp(i8::MIN as f32, i8::MAX as f32) as i8
 });
 impl ScaledConverterBuilder<f32, i16> {
@@ -157,54 +157,44 @@ impl ScaledConverterBuilder<f32, i16> {
         }
 
         for (s, d) in src_rem.iter().zip(dst_rem.iter_mut()) {
-            let scaled = unsafe { core::intrinsics::fmul_fast(*s, 32767.0) };
+            let scaled = f32::algebraic_mul(*s, 32767.0);
             *d = scaled.round().clamp(-32768.0, 32767.0) as i16;
         }
     }
 }
 
 impl_scaled_converter!(f32, i16, |i| {
-    let scaled = unsafe { core::intrinsics::fmul_fast(*i, i16::MAX as f32) };
+    let scaled = f32::algebraic_mul(*i, i16::MAX as f32);
     scaled.round().clamp(i16::MIN as f32, i16::MAX as f32) as i16
 });
 impl_scaled_converter!(f32, i32, |i| {
-    let scaled = unsafe { core::intrinsics::fmul_fast(*i, i32::MAX as f32) };
+    let scaled = f32::algebraic_mul(*i, i32::MAX as f32);
     scaled.round().clamp(i32::MIN as f32, i32::MAX as f32) as i32
 });
 
 // Unsigned integer <-> f32 conversions (midpoint mapped to 0.0, GNU Radio standard)
-impl_scaled_converter!(u8, f32, |i| unsafe {
-    core::intrinsics::fmul_fast(core::intrinsics::fsub_fast(*i as f32, 128.0), 1.0 / 128.0)
+impl_scaled_converter!(u8, f32, |i| {
+    f32::algebraic_mul(f32::algebraic_sub(*i as f32, 128.0), 1.0 / 128.0)
 });
-impl_scaled_converter!(u16, f32, |i| unsafe {
-    core::intrinsics::fmul_fast(
-        core::intrinsics::fsub_fast(*i as f32, 32768.0),
-        1.0 / 32768.0,
-    )
+impl_scaled_converter!(u16, f32, |i| {
+    f32::algebraic_mul(f32::algebraic_sub(*i as f32, 32768.0), 1.0 / 32768.0)
 });
-impl_scaled_converter!(u32, f32, |i| unsafe {
-    core::intrinsics::fmul_fast(
-        core::intrinsics::fsub_fast(*i as f64, 2147483648.0),
+impl_scaled_converter!(u32, f32, |i| {
+    f64::algebraic_mul(
+        f64::algebraic_sub(*i as f64, 2147483648.0),
         1.0 / 2147483648.0,
     ) as f32
 });
 
 impl_scaled_converter!(f32, u8, |i| {
-    let scaled =
-        unsafe { core::intrinsics::fadd_fast(core::intrinsics::fmul_fast(*i, 128.0), 128.0) };
+    let scaled = (*i).mul_add(128.0, 128.0);
     scaled.round().clamp(0.0, 255.0) as u8
 });
 impl_scaled_converter!(f32, u16, |i| {
-    let scaled =
-        unsafe { core::intrinsics::fadd_fast(core::intrinsics::fmul_fast(*i, 32768.0), 32768.0) };
+    let scaled = (*i).mul_add(32768.0, 32768.0);
     scaled.round().clamp(0.0, 65535.0) as u16
 });
 impl_scaled_converter!(f32, u32, |i| {
-    let scaled = unsafe {
-        core::intrinsics::fadd_fast(
-            core::intrinsics::fmul_fast(*i as f64, 2147483648.0),
-            2147483648.0,
-        )
-    };
+    let scaled = ((*i) as f64).mul_add(2147483648.0, 2147483648.0);
     scaled.round().clamp(0.0, u32::MAX as f64) as u32
 });
