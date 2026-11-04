@@ -1,32 +1,76 @@
 name: Release
 
-# permissions:
-#   contents: write
-
 on:
-  push:
-    tags:
-      - '*-?v[0-9]+*'
+  workflow_dispatch:
+    inputs:
+      level:
+        description: Version bump level
+        required: true
+        default: patch
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
 
-env: 
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  package-crate:
+  ci:
+    name: CI
+    uses: ./.github/workflows/ci.yml
+
+  bump_and_tag:
+    name: Bump version and tag
+    needs: ci
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: dtolnay/rust-toolchain@nightly
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo install cargo-release --locked
+      - run: git config user.email "11601995+ratzrattillo@users.noreply.github.com"
+      - run: git config user.name "ratzrattillo"
+      - run: cargo release "${{ inputs.level }}" --no-changelog --execute --no-verify --no-publish --no-push --no-confirm
+      - run: git push origin HEAD "$(git describe --tags --abbrev=0)"
+
+  github_release:
+    name: GitHub release
+    needs: bump_and_tag
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          ref: ${{ github.ref_name }}
+      - run: git fetch --tags origin
+      - run: gh release create "$(git describe --tags --abbrev=0)" --generate-notes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  publish:
+    name: Publish to crates.io
+    needs: github_release
     runs-on: ubuntu-latest
     environment: cargo-crate-publish
     steps:
-      - uses: actions/checkout@v3
-      - uses: dtolnay/rust-toolchain@nightly
-      - name: Login to crates.io
-        uses: actions-rs/cargo@v1
+      - uses: actions/checkout@v5
         with:
-          toolchain: nightly
-          command: login
-          args: ${{ secrets.CARGO_REGISTRY_TOKEN }}
-      - run: sudo apt-get -y update
-      - run: sudo apt-get install -y libzmq3-dev
-      - run: sudo apt-get -y install libasound2-dev
-      - run: sudo apt-get -y install liblttng-ust-dev
-      - run: sudo apt-get -y install libsoapysdr-dev
-      - run: cargo publish   
+          fetch-depth: 0
+          ref: ${{ github.ref_name }}
+      - uses: dtolnay/rust-toolchain@nightly
+      - uses: Swatinem/rust-cache@v2
+      - run: git fetch --tags origin
+      - run: git checkout "$(git describe --tags --abbrev=0)"
+      - run: cargo publish --token "${{ secrets.CARGO_REGISTRY_TOKEN }}"

@@ -1,34 +1,21 @@
 name: Pre-Release
 
-# permissions:
-#   contents: write
-
 on:
   push:
     branches:
       - main
       - chore/dist
 
-env: 
+env:
   CARGO_TERM_COLOR: always
 
 jobs:
   package-crate:
     runs-on: ubuntu-latest
-    environment: cargo-crate-publish
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@nightly
-      - name: Login to crates.io
-        uses: actions-rs/cargo@v1
-        with:
-          toolchain: nightly
-          command: login
-          args: ${{ secrets.CARGO_REGISTRY_TOKEN }}
       - run: sudo apt-get -y update
-      - run: sudo apt-get install -y libzmq3-dev
-      - run: sudo apt-get -y install libasound2-dev
-      - run: sudo apt-get -y install liblttng-ust-dev
-      - run: sudo apt-get -y install libsoapysdr-dev
+      - run: sudo apt-get install -y libasound2-dev libzmq3-dev
       - run: cargo publish --dry-run
       - run: cargo package --list
