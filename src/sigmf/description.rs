@@ -1,4 +1,4 @@
-use crate::Recording;
+use super::Recording;
 use std::{
     fs::File,
     io::{self, BufReader},
@@ -8,7 +8,7 @@ use std::{
 #[cfg(feature = "quickcheck")]
 use quickcheck::{Arbitrary, Gen, empty_shrinker};
 
-use crate::{Annotation, Capture, Collection, DatasetFormat, Extension, Global, SigMFError};
+use super::{Annotation, Capture, Collection, DatasetFormat, Extension, Global, SigMFError};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Description {

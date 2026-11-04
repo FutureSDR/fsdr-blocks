@@ -40,20 +40,26 @@ hex = "0.4"
 anyhow = "1.0"
 clap = { version = "4.5", features = ["derive"] }
 walkdir = "2.5"
-rustc_version = "0.4.0"
 
 [dependencies]
 futuresdr = { version = "0.10", default-features = false }
 async-channel = { workspace = true, optional = true }
 crossbeam-channel = { workspace = true, optional = true }
 bimap = { workspace = true, optional = true }
-sigmf = { version = "0.1", path = "crates/sigmf" }
 async-fs = { workspace = true }
 serde = { workspace = true }
+serde_derive = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+uuid = { workspace = true }
+sha2 = { workspace = true }
+hex = { workspace = true }
+quickcheck = { workspace = true, optional = true }
 
 [dev-dependencies]
 futuresdr = { workspace = true, features = ["mocker"] }
 criterion = { workspace = true }
+quickcheck = { workspace = true }
 quickcheck_macros = { workspace = true }
 tokio-test = { workspace = true }
 rand = { workspace = true }
@@ -64,6 +70,7 @@ default = []
 crossbeam = ["dep:crossbeam-channel"]
 async-channel = ["dep:async-channel"]
 cw = ["dep:bimap"]
+quickcheck = ["dep:quickcheck"]
 
 [[bench]]
 name = "crossbeam_sink"

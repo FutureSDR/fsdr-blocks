@@ -1,4 +1,4 @@
-use crate::errors::SigMFError;
+use super::errors::SigMFError;
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
 pub struct AntennaExtension {

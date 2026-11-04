@@ -3,7 +3,7 @@ use std::{fmt, marker::PhantomData};
 #[cfg(feature = "quickcheck")]
 use quickcheck::{Arbitrary, Gen, empty_shrinker, single_shrinker};
 
-use crate::SigMFError;
+use super::SigMFError;
 
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub enum DatasetFormat {

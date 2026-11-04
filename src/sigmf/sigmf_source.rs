@@ -5,8 +5,8 @@ use futuresdr::futures::AsyncRead;
 use futuresdr::futures::AsyncReadExt;
 use futuresdr::runtime::dev::prelude::*;
 
-use sigmf::RecordingBuilder;
-use sigmf::{Annotation, Description};
+use super::RecordingBuilder;
+use super::{Annotation, Description};
 
 use super::BytesConveter;
 use crate::serde_pmt;
@@ -201,7 +201,7 @@ impl SigMFSourceBuilder {
         &mut self,
     ) -> Result<SigMFSource<T, async_fs::File, impl FnMut(&[u8]) -> T + Send + 'static>>
     where
-        sigmf::DatasetFormat: BytesConveter<T>,
+        super::DatasetFormat: BytesConveter<T>,
     {
         let mut record = RecordingBuilder::from(&self.basename);
         let (_, desc) = record.load_description()?;
@@ -220,7 +220,7 @@ where
         self,
     ) -> Result<SigMFSource<T, R, impl FnMut(&[u8]) -> T + Send + 'static>>
     where
-        sigmf::DatasetFormat: BytesConveter<T>,
+        super::DatasetFormat: BytesConveter<T>,
     {
         let datatype = *self.desc.global()?.datatype()?;
         SigMFSource::<T, R, _>::new(self.data, self.desc, move |bytes| datatype.convert(bytes))

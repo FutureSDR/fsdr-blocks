@@ -1,4 +1,4 @@
-use sigmf::{DatasetFormat, DescriptionBuilder, RecordingBuilder};
+use fsdr_blocks::sigmf::{DatasetFormat, DescriptionBuilder, RecordingBuilder};
 use std::fs::File;
 use std::io::Write;
 

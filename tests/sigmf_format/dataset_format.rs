@@ -2,7 +2,7 @@
 #[macro_use(quickcheck)]
 extern crate quickcheck_macros;
 
-use sigmf::{DatasetFormat, DatasetFormatBuilder, SigMFError};
+use fsdr_blocks::sigmf::{DatasetFormat, DatasetFormatBuilder, SigMFError};
 
 #[quickcheck]
 fn qc_little_endian_ends_with_le(dataset: DatasetFormat) -> bool {

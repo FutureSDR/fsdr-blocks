@@ -1,11 +1,11 @@
 use fsdr_blocks::sigmf::BytesConveter;
+use fsdr_blocks::sigmf::DatasetFormat;
+use fsdr_blocks::sigmf::DescriptionBuilder;
 use fsdr_blocks::sigmf::SigMFSourceBuilder;
 use futuresdr::blocks::VectorSink;
 use futuresdr::futures::io::BufReader;
 use futuresdr::futures::io::Cursor;
 use futuresdr::prelude::*;
-use sigmf::DatasetFormat;
-use sigmf::DescriptionBuilder;
 
 pub fn test_no_conversion<T>(data: &[u8], datatype: DatasetFormat) -> Result<Vec<T>>
 where

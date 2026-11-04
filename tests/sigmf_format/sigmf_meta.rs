@@ -1,4 +1,4 @@
-use sigmf::{DatasetFormatBuilder, Description, DescriptionBuilder, SigMFError};
+use fsdr_blocks::sigmf::{DatasetFormatBuilder, Description, DescriptionBuilder, SigMFError};
 
 #[test]
 fn parse_mandatory() -> Result<(), SigMFError> {

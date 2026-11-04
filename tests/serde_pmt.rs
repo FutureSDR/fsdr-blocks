@@ -124,7 +124,7 @@ fn test_pmt_option_char() -> Result<()> {
 
 #[test]
 fn test_pmt_sigmf_annot() -> Result<()> {
-    let mut annot = sigmf::Annotation {
+    let mut annot = fsdr_blocks::sigmf::Annotation {
         sample_start: Some(0),
         ..Default::default()
     };
@@ -147,7 +147,7 @@ fn test_pmt_sigmf_annot() -> Result<()> {
 
 #[test]
 fn test_sigmf_annot_pmt() -> Result<()> {
-    let annot = sigmf::Annotation {
+    let annot = fsdr_blocks::sigmf::Annotation {
         sample_start: Some(0),
         ..Default::default()
     };

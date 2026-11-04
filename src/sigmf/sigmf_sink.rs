@@ -4,8 +4,8 @@ use std::path::PathBuf;
 
 use futuresdr::runtime::dev::prelude::*;
 
-use sigmf::Annotation;
-use sigmf::{DatasetFormat, DescriptionBuilder};
+use super::Annotation;
+use super::{DatasetFormat, DescriptionBuilder};
 
 use crate::serde_pmt::from_pmt;
 
