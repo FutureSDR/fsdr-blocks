@@ -1,6 +1,6 @@
 use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
-use sigmf::{DescriptionBuilder, RecordingBuilder};
+use fsdr_blocks::sigmf::{DescriptionBuilder, RecordingBuilder};
 use std::path::PathBuf;
 
 #[derive(Parser)]

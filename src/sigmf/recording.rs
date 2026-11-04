@@ -1,4 +1,4 @@
-use crate::{Description, SigMFError};
+use super::{Description, SigMFError};
 use sha2::{Digest, Sha512};
 use std::io::Read;
 use std::path::Path;

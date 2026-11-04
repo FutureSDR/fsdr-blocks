@@ -1,9 +1,9 @@
+use fsdr_blocks::sigmf::{Annotation, DatasetFormat, DescriptionBuilder};
 use fsdr_blocks::sigmf::{BytesConveter, SigMFSink, SigMFSourceBuilder};
 use futuresdr::blocks::{VectorSink, VectorSource};
 use futuresdr::futures::io::BufReader;
 use futuresdr::futures::io::Cursor;
 use futuresdr::prelude::*;
-use sigmf::{Annotation, DatasetFormat, DescriptionBuilder};
 
 /// Write the data into a SigMF file,
 /// then read it back again

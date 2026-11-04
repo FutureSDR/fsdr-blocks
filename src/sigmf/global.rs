@@ -1,4 +1,4 @@
-use crate::{AntennaExtension, DatasetFormat, Extension, errors::SigMFError};
+use super::{AntennaExtension, DatasetFormat, Extension, errors::SigMFError};
 use serde_json::Value;
 use std::collections::HashMap;
 

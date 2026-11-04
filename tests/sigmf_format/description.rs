@@ -4,7 +4,7 @@ extern crate quickcheck_macros;
 
 use std::io::Cursor;
 
-use sigmf::{DatasetFormat, Description, DescriptionBuilder, SigMFError};
+use fsdr_blocks::sigmf::{DatasetFormat, Description, DescriptionBuilder, SigMFError};
 
 #[quickcheck]
 fn qc_write_read(desc_input: Description) -> bool {
