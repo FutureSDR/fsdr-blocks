@@ -25,7 +25,7 @@ use futuresdr::runtime::dev::prelude::*;
 /// connect!(fg, src > snk);
 /// Runtime::new().run(fg)?;
 ///
-/// assert_eq!(orig, futuresdr::async_io::block_on(rx.recv()).unwrap().to_vec());
+/// assert_eq!(orig, futuresdr::runtime::block_on(rx.recv()).unwrap().to_vec());
 /// # Ok(())
 /// # }
 /// ```

@@ -26,9 +26,9 @@ use futuresdr::runtime::dev::prelude::*;
 /// drop(tx);
 ///
 /// connect!(fg, src > snk);
-/// Runtime::new().run(fg)?;
+/// let fg = Runtime::new().run(fg)?;
 ///
-/// let snk_get = snk.get().unwrap();
+/// let snk_get = fg.block(&snk).unwrap();
 /// assert_eq!(orig, *snk_get.items());
 /// # Ok(())
 /// # }
