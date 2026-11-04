@@ -16,7 +16,7 @@ use futuresdr::runtime::dev::prelude::*;
 /// let mut fg = Flowgraph::new();
 /// let (tx, rx) = async_channel::unbounded::<Box<[u32]>>();
 ///
-/// let async_channel_src = fg.add_block(AsyncChannelSource::<u32>::new(rx));
+/// let async_channel_src = fg.add(AsyncChannelSource::<u32>::new(rx));
 ///
 /// // tx.send(orig.clone().into_boxed_slice()).await.unwrap();
 /// ```

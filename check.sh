@@ -19,3 +19,8 @@ cd ${SCRIPTPATH} && cargo clippy --all-targets --all-features --workspace
 # Test
 ###########################################################
 cd ${SCRIPTPATH} && cargo test --all-targets --all-features --workspace
+
+###########################################################
+# Doc tests
+###########################################################
+cd ${SCRIPTPATH} && cargo test --all-features --workspace --doc
